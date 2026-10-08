@@ -1,0 +1,65 @@
+Passiflora - GetDecics (NumberFields@home) optimized app, CPU and GPU
+=======================================================================
+Results are identical to the stock app (checked on all 31 test work units); the CPU
+version is 10-25x faster on one core, the GPU version finishes a work unit in seconds.
+
+WHICH FILE DO I DOWNLOAD?
+-------------------------
+  CPU_...            the normal app, no graphics card needed. Take this if unsure.
+  GPU-OpenCL_...     the same plus the version that uses an NVIDIA, AMD or Intel card
+                     (needs a card with double-precision OpenCL and a driver that provides OpenCL).
+
+  ..._windows_x86-64.zip       Windows 64-bit
+  ..._linux_x86-64.tar.gz      Linux 64-bit (GPU package: glibc 2.34+, i.e. Ubuntu 22.04 or newer)
+
+Verify the download with SHA256SUMS. macOS and ARM are not available yet.
+
+BEFORE YOU START - READ THIS
+----------------------------
+* This is a BOINC "anonymous platform" app. It has been run with the upstream test work units
+  and a stand-in for the BOINC client, NOT yet in a real BOINC client against the live
+  NumberFields server. Whether the project accepts results from anonymous-platform apps is up to
+  the project. Run ONE task first and check that it validates before leaving it running.
+* Once app_info.xml is in the project folder, the client only gets tasks for the versions listed in
+  it. Tasks you already have for the stock app may be lost, so let them finish (set "No new tasks")
+  or abort them first.
+* The app finishes tasks much faster than the stock app and so earns much more credit per hour.
+  Please be fair to other volunteers and let the project know that you use it.
+* Do not switch between the CPU app, the GPU app and the stock app in the middle of a task.
+
+INSTALL - WINDOWS
+-----------------
+1. BOINC Manager: Projects -> NumberFields@home -> "No new tasks". Let your tasks finish.
+2. BOINC Manager: File -> Exit BOINC (tick "Stop running tasks").
+3. Unzip the package and copy everything inside the folder (the .exe file(s) and app_info.xml)
+   into   C:\ProgramData\BOINC\projects\numberfields.asu.edu_NumberFields\
+   (ProgramData is a hidden folder: type it into the address bar.)
+4. Start BOINC Manager and choose "Allow new tasks".
+5. Open the first new task's properties: the app version shows as 4.00 (CPU) or 4.02 (GPU).
+
+INSTALL - LINUX
+---------------
+1. boinccmd --project https://numberfields.asu.edu/NumberFields/ nomorework   (let tasks finish)
+2. sudo systemctl stop boinc-client
+3. tar xzf the package, then copy its files into the project folder
+   (Debian/Ubuntu: /var/lib/boinc-client/projects/numberfields.asu.edu_NumberFields/):
+     sudo cp run_passiflora_linux_x86-64*/GetDecics_passiflora* run_passiflora_linux_x86-64*/app_info.xml <folder>/
+     sudo chown boinc:boinc <folder>/GetDecics_passiflora* <folder>/app_info.xml
+     sudo chmod +x <folder>/GetDecics_passiflora*
+4. sudo systemctl start boinc-client ; boinccmd --project https://numberfields.asu.edu/NumberFields/ allowmorework
+
+GPU NOTES
+---------
+* One program serves NVIDIA, AMD and Intel (OpenCL). BOINC chooses the card.
+* If the card has no double-precision support or no usable OpenCL driver, the task fails at
+  start-up with a message in stderr ("GPU mode: ..." line tells which device was used). Use the
+  CPU package instead.
+* Tested on real hardware: Windows + NVIDIA RTX 5070 Ti. Linux was only run on a CPU OpenCL
+  implementation (pocl); AMD and Intel cards are untested.
+
+UNINSTALL
+---------
+Stop BOINC, delete app_info.xml and the GetDecics_passiflora* file(s) from the project folder, start BOINC.
+
+Source and details: https://github.com/alplix/passiflora   (licence GPL-2.0-or-later)
+Original application: Eric Driver, https://github.com/drivere/get-decics-numberfields

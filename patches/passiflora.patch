@@ -1,0 +1,417 @@
+diff -U0 -r a/GetDecicsSrc/GetDecics.cpp b/GetDecicsSrc/GetDecics.cpp
+--- a/GetDecicsSrc/GetDecics.cpp	2026-10-08 11:57:57.391066912 +0300
++++ b/GetDecicsSrc/GetDecics.cpp	2026-10-08 11:57:57.400390462 +0300
+@@ -102,0 +103,3 @@
++extern int nfArgc;
++extern char **nfArgv;
++
+@@ -135,0 +139,2 @@
++
++  nfArgc = argc;  nfArgv = argv;
+diff -U0 -r a/GetDecicsSrc/TgtMartinet.cpp b/GetDecicsSrc/TgtMartinet.cpp
+--- a/GetDecicsSrc/TgtMartinet.cpp	2026-10-08 11:57:57.356031057 +0300
++++ b/GetDecicsSrc/TgtMartinet.cpp	2026-10-08 11:57:57.372010831 +0300
+@@ -20,0 +21,3 @@
++#include "nf_gpu.h"
++#include <vector>
++#include <climits>
+@@ -44,0 +48,190 @@
++// ---- shared pieces of the polynomial discriminant stage -------------------------------
++
++static void (*nfPdfFilter)(const long long*, int, signed char*) = 0;
++
++// Picks the instruction-set variant of the Fortran filter and initialises it (once).
++static void nfPdfSetup(int numPrimes, int *pSet)
++{
++  if(nfPdfFilter) return;
++  void (*pdfInit)(int, const int*);
++#ifdef NF_PDF_DISPATCH
++  const char *fb = getenv("NF_FORCE_BASE");
++  __builtin_cpu_init();
++  if(!(fb && *fb=='1') && __builtin_cpu_supports("avx2") && __builtin_cpu_supports("fma")) {
++    pdfInit = pdf_init_v3;    nfPdfFilter = pdf_filter_v3;
++    fprintf(stderr, "polDisc pre-filter: AVX2/FMA build.\n");
++    }
++  else {
++    pdfInit = pdf_init_base;  nfPdfFilter = pdf_filter_base;
++    fprintf(stderr, "polDisc pre-filter: baseline build.\n");
++    }
++#else
++  pdfInit = pdf_init;  nfPdfFilter = pdf_filter;
++#endif
++  pdfInit(numPrimes, pSet);
++}
++
++// Irreducibility and field discriminant tests for the polynomials whose flag is set.
++static void nfFinishPolys(pari_long *polBuf, int n, pari_long *StatVec, ofstream& outfile)
++{
++  pari_long *pdCount  = &(StatVec[1]);
++  pari_long *irrCount = &(StatVec[2]);
++  pari_long *fdCount  = &(StatVec[3]);
++  int numPrimes = (int)(lg(Sg)-1);
++  pari_long ltop = avma;
++
++  for(int j=0;j<n;++j)
++    {
++    if(polGoodFlag[j])
++      {
++      (*pdCount)++;
++      GEN f_L = mkpoln( 11, gen_1, stoi(polBuf[j*11+1]), stoi(polBuf[j*11+2]),
++                                   stoi(polBuf[j*11+3]), stoi(polBuf[j*11+4]),
++                                   stoi(polBuf[j*11+5]), stoi(polBuf[j*11+6]),
++                                   stoi(polBuf[j*11+7]), stoi(polBuf[j*11+8]),
++                                   stoi(polBuf[j*11+9]), stoi(polBuf[j*11+10]) );
++      if(isirreducible(f_L))
++        {
++        (*irrCount)++;
++        GEN fldDisc = discf(f_L);
++        for(int k=1;k<=numPrimes;++k)
++          fldDisc = gdiv(fldDisc,gpowgs((GEN)Sg[k],ggval(fldDisc,(GEN)Sg[k])));
++        if(gcmp1(gabs(fldDisc,DEFAULTPREC)))
++          {
++          (*fdCount)++;
++          char *OutStr = GENtostr(f_L);
++          outfile << OutStr << "\n";
++          outfile.flush();
++          free(OutStr);
++          }
++        }
++      avma = ltop;
++      }
++    }
++}
++
++
++inline pari_long myTimer();
++
++// ---- GPU mode -------------------------------------------------------------------------
++int nfArgc = 0;
++char **nfArgv = 0;
++static bool nfUseGpu = false;
++static bool nfGpuCheck = false;      // NF_GPUCHECK=1: also run the CPU loops and compare counts
++static long long nfRefCount = 0;     // polynomials the CPU loops saw for the nodes of the current batch
++
++// Run the pending batch on the GPU, finish the survivors on the CPU exactly like the
++// stock code does, and checkpoint.  (i,N1,..,L2) is the first node NOT in the batch.
++static void nfGpuFlushBatch(pari_long i, pari_long N1, pari_long N2, pari_long k1, pari_long k2,
++                            pari_long L1, pari_long L2, pari_long *StatVec, ofstream& outfile, bool final=false)
++{
++  if(nfGpuEmpty()) return;
++  std::vector<long long> polys;
++  long long inspected = nfGpuRun(polys);
++  if(nfGpuCheck) {
++    if(inspected != nfRefCount) {
++      fprintf(stderr, "NF_GPUCHECK MISMATCH: gpu inspected %lld, cpu %lld\n", inspected, nfRefCount);
++      exit(6);
++      }
++    nfRefCount = 0;
++    }
++  StatVec[0] += inspected;
++
++  int numPrimes = (int)(lg(Sg)-1);
++  int pSet[3];
++  for(int k=0; k<numPrimes; k++)  pSet[k] = (int)itos((GEN)Sg[k+1]);
++  nfPdfSetup(numPrimes, pSet);
++
++  size_t total = polys.size()/11;
++  for(size_t off=0; off<total; off += polyBufferSize) {
++    int m = (int)std::min((size_t)polyBufferSize, total-off);
++    pari_long *buf = (pari_long*)&polys[off*11];
++    nfPdfFilter(buf, m, (signed char*)polGoodFlag);
++    polDiscTest_cpu(buf, m, polGoodFlag, polGoodFlag, numPrimes, pSet);
++    nfFinishPolys(buf, m, StatVec, outfile);
++    }
++
++  if(!final && boinc_time_to_checkpoint())
++    {
++    StatVec[4] = StatVec[4] + (pari_long)floor(myTimer()/1000.0 + .5);
++    pari_long idx[9] = { i, N1, N2, k1, k2, L1, L2, LLONG_MIN, LLONG_MIN };
++    int retval = do_checkpoint(idx, StatVec);
++    if(retval) { fprintf(stderr, "Checkpoint failed!\n"); exit(retval); }
++    boinc_checkpoint_completed();
++    }
++}
++
++static inline double nfNow() {
++  struct timespec ts;
++  clock_gettime(CLOCK_MONOTONIC, &ts);
++  return ts.tv_sec + 1e-9*ts.tv_nsec;
++  }
++
++// Largest double T with sqrt(T) <= B.  sqrt is correctly rounded and monotone,
++// so for any double X:  sqrt(X) <= B  <=>  X >= 0 && X <= T  (NaN/negative X
++// give false on both sides; -0.0 gives true on both sides).  This lets the hot
++// loops skip the sqrt while taking exactly the same branches as the original.
++static double sqrtLeLimit(double B) {
++  if(isnan(B) || B < 0.0) return -INFINITY;
++  if(isinf(B)) return INFINITY;
++  double T = B*B;
++  while(sqrt(T) > B) T = nextafter(T, -INFINITY);
++  while(sqrt(nextafter(T, INFINITY)) <= B) T = nextafter(T, INFINITY);
++  return T;
++  }
++
++// Narrow the integer range [*lo,*hi] of m to the values that can still pass
++//     X(m) <= T,   X = a1sq + l1*a1a2 + l2*a2sq   (evaluated in doubles),
++// where a1 = p1*m + c1 and a2 = p2*m + c2.  Along m the exact form
++// Q(m) = A m^2 + B m + C is convex (A > 0), so {Q <= T} is an interval.  We
++// solve Q = T + delta in long double, with delta = 1e-9*(|T| + Smax) far above
++// the rounding error of X (a few ulps of Smax, the largest term sum on the
++// range), and widen the roots by 2.  Every m dropped has Q > T + delta, hence
++// X > T, so the original test would fail there too.  Nothing is narrowed when
++// the range or the coefficients are large enough for int64 overflow to matter.
++static void nfNarrow(pari_long p1, pari_long c1, pari_long p2, pari_long c2,
++                     double l1, double l2, double T, pari_long *lo, pari_long *hi)
++{
++  typedef long double ld;
++  if(*lo > *hi) return;
++  if(T == -INFINITY) { *hi = *lo - 1; return; }  // sqrtLeLimit: nothing passes
++  if(!(T < INFINITY)) return;
++  const ld LIM_M = 1099511627776.0L;   // 2^40
++  const ld LIM_A = 2147483648.0L;      // 2^31: squares and products fit in int64
++  if(fabsl((ld)*lo) > LIM_M || fabsl((ld)*hi) > LIM_M) return;
++  ld a1lo = (ld)p1*(*lo) + c1, a2lo = (ld)p2*(*lo) + c2;
++  ld a1hi = (ld)p1*(*hi) + c1, a2hi = (ld)p2*(*hi) + c2;
++  if(fabsl(a1lo) >= LIM_A || fabsl(a2lo) >= LIM_A || fabsl(a1hi) >= LIM_A || fabsl(a2hi) >= LIM_A) return;
++  ld Slo = a1lo*a1lo + fabsl((ld)l1*a1lo*a2lo) + fabsl((ld)l2)*a2lo*a2lo;
++  ld Shi = a1hi*a1hi + fabsl((ld)l1*a1hi*a2hi) + fabsl((ld)l2)*a2hi*a2hi;
++  ld Smax = (Slo > Shi) ? Slo : Shi;
++  ld A = (ld)p1*p1 + (ld)l1*p1*p2 + (ld)l2*p2*p2;
++  ld B = 2.0L*p1*c1 + (ld)l1*((ld)p1*c2 + (ld)p2*c1) + 2.0L*(ld)l2*p2*c2;
++  ld C = (ld)c1*c1 + (ld)l1*c1*c2 + (ld)l2*c2*c2;
++  if(!(A > 1e-6L)) return;
++  ld Tp = (ld)T + 1e-9L*(fabsl((ld)T) + Smax) + 1e-30L;
++  ld D = B*B - 4.0L*A*(C - Tp);
++  if(D < 0) { *hi = *lo - 1; return; }
++  ld s = sqrtl(D);
++  ld nl = floorl((-B - s)/(2.0L*A)) - 2.0L;
++  ld nh = ceill((-B + s)/(2.0L*A)) + 2.0L;
++  if(nl > (ld)*hi || nh < (ld)*lo || nl > nh) { *hi = *lo - 1; return; }
++  if(nl > (ld)*lo) *lo = (pari_long)nl;
++  if(nh < (ld)*hi) *hi = (pari_long)nh;
++}
++
++// Whole-run split between the polDisc test and everything else (stderr at exit).
++static double nfProfStart = 0, nfProfPd = 0;
++#ifdef NF_COUNT
++static long long nfCnt[8];
++#endif
++static void nfProfReport() {
++#ifdef NF_COUNT
++  fprintf(stderr, "NF_COUNT m1iters=%lld pass_s1=%lld pass_both=%lld L1iters=%lld pass_a3=%lld m2iters=%lld\n",
++          nfCnt[0], nfCnt[1], nfCnt[2], nfCnt[3], nfCnt[4], nfCnt[5]);
++#endif
++  if(nfProfStart>0)
++    fprintf(stderr, "NF_TIMING total=%.3f s polDisc=%.3f s other=%.3f s\n",
++            nfNow()-nfProfStart, nfProfPd, nfNow()-nfProfStart-nfProfPd);
++  }
++
+@@ -129,0 +323,9 @@
++  {
++    int np = (int)(lg(Sg)-1);
++    int ps[3] = {0,0,0};
++    for(int k=0; k<np && k<3; k++)  ps[k] = (int)itos((GEN)Sg[k+1]);
++    nfUseGpu = nfGpuInit(nfArgc, nfArgv, np, ps);
++    const char *gc = getenv("NF_GPUCHECK");
++    nfGpuCheck = nfUseGpu && gc && *gc=='1';
++  }
++
+@@ -335 +537 @@
+-  double s1a2_mag,s2a2_mag,s1a3_mag,s2a3_mag,s1a4_mag,s2a4_mag;
++  double s1a2_mag,s2a2_mag,s1a3_sq,s2a3_sq,s1a4_sq,s2a4_sq;
+@@ -752,0 +955,6 @@
++              // sqrt(X)<=B is replaced by 0<=X<=T with T = sqrtLeLimit(B); see there.
++              const double T_a3  = sqrtLeLimit(2*tq[3]);
++              const double T_a3c = sqrtLeLimit(2*tqc[3]);
++              const double T_a4  = sqrtLeLimit(B_a4);
++              const double T_a4c = sqrtLeLimit(B_a4c);
++
+@@ -891,2 +1099,2 @@
+-                          s1a3_mag = sqrt(a31sq + lambda1*a31a32  + lambda2*a32sq);
+-                          s2a3_mag = sqrt(a31sq + lambda1c*a31a32 + lambda2c*a32sq);
++                          s1a3_sq = a31sq + lambda1*a31a32  + lambda2*a32sq;
++                          s2a3_sq = a31sq + lambda1c*a31a32 + lambda2c*a32sq;
+@@ -894 +1102,11 @@
+-                          if( (s1a3_mag<=2*tq[3]) && (s2a3_mag<=2*tqc[3]) )
++                          // Same as: sqrt(s1a3_sq)<=2*tq[3] && sqrt(s2a3_sq)<=2*tqc[3]
++#ifdef NF_COUNT
++                          nfCnt[3]++;
++                          if(s1a3_sq>=0.0 && s1a3_sq<=T_a3 && s2a3_sq>=0.0 && s2a3_sq<=T_a3c) nfCnt[4]++;
++#endif
++#ifdef NF_CHECK_SQRT
++                          if( ((sqrt(s1a3_sq)<=2*tq[3]) && (sqrt(s2a3_sq)<=2*tqc[3])) !=
++                              (s1a3_sq>=0.0 && s1a3_sq<=T_a3 && s2a3_sq>=0.0 && s2a3_sq<=T_a3c) ) {
++                            fprintf(stderr, "NF_CHECK_SQRT mismatch (a3)\n");  exit(4); }
++#endif
++                          if( s1a3_sq>=0.0 && s1a3_sq<=T_a3 && s2a3_sq>=0.0 && s2a3_sq<=T_a3c )
+@@ -937,0 +1156,33 @@
++                              if(nfUseGpu)
++                                {
++                                // The m2/m1 loops run on the GPU: queue this node.
++                                if(ChkPntFlag)
++                                  {
++                                  k2_L = k2_L_Orig;
++                                  ChkPntFlag = 0;
++                                  }
++                                if(m2_L<=m2_U)
++                                  {
++                                  if(nfGpuWantFlush())
++                                    nfGpuFlushBatch(i, N1, N2, k1, k2, L1, L2, StatVec, outfile);
++                                  NfNode nd;
++                                  nd.d[0]=e1p; nd.d[1]=e2p; nd.d[2]=B_s4/16.0; nd.d[3]=t22*t22;
++                                  nd.d[4]=t12; nd.d[5]=t11;
++                                  nd.d[6]=lambda1; nd.d[7]=lambda2; nd.d[8]=lambda1c; nd.d[9]=lambda2c;
++                                  nd.d[10]=T_a4; nd.d[11]=T_a4c;
++                                  nd.d[12]=t[5]; nd.d[13]=t[6]; nd.d[14]=t[7]; nd.d[15]=t[8]; nd.d[16]=t[9];
++                                  nd.d[17]=bb8_Upre;
++                                  long long *q = nd.i;
++                                  q[0]=m2_L;  q[1]=m2_U;
++                                  q[2]=M11;   q[3]=M12;  q[4]=M21;  q[5]=M22;  q[6]=cv41;  q[7]=cv42;
++                                  q[8]=a11;   q[9]=a12;  q[10]=a21; q[11]=a22; q[12]=a31;  q[13]=a32;
++                                  q[14]=a51;  q[15]=a52; q[16]=Tr_w; q[17]=Nm_w;
++                                  q[18]=bb9_L0; q[19]=bb9_U0;
++                                  q[20]=bb4_pre2; q[21]=bb4_L; q[22]=bb4_U;
++                                  q[23]=bb5_pre2; q[24]=bb6_pre2; q[25]=bb7_pre; q[26]=bb8_pre;
++                                  q[27]=bb[1]; q[28]=bb[2]; q[29]=bb[3];
++                                  q[30]=s[1];  q[31]=s[2];  q[32]=s[3];  q[33]=Sum4;  q[34]=bb[10];
++                                  nfGpuAdd(nd);
++                                  }
++                                }
++                              if(!nfUseGpu || nfGpuCheck)
+@@ -941,0 +1193,3 @@
++#ifdef NF_COUNT
++                                nfCnt[5]++;
++#endif
+@@ -960 +1214,12 @@
+-                                for(m1=m1_L;m1<=m1_U;++m1)
++                                // Skip the m1 values that provably fail the a4 test below.
++                                pari_long m1_lo = m1_L, m1_hi = m1_U;
++                                nfNarrow(M11, M12*m2 + cv41, M21, M22*m2 + cv42, lambda1,  lambda2,  T_a4,  &m1_lo, &m1_hi);
++                                nfNarrow(M11, M12*m2 + cv41, M21, M22*m2 + cv42, lambda1c, lambda2c, T_a4c, &m1_lo, &m1_hi);
++#ifdef NF_CHECK_PRUNE
++                                m1_lo = m1_L; m1_hi = m1_U;
++                                pari_long chk_lo = m1_L, chk_hi = m1_U;
++                                nfNarrow(M11, M12*m2 + cv41, M21, M22*m2 + cv42, lambda1,  lambda2,  T_a4,  &chk_lo, &chk_hi);
++                                nfNarrow(M11, M12*m2 + cv41, M21, M22*m2 + cv42, lambda1c, lambda2c, T_a4c, &chk_lo, &chk_hi);
++#endif
++
++                                for(m1=m1_lo;m1<=m1_hi;++m1)
+@@ -970,2 +1235,2 @@
+-                                  s1a4_mag = sqrt(a41sq + lambda1*a41a42  + lambda2*a42sq);
+-                                  s2a4_mag = sqrt(a41sq + lambda1c*a41a42 + lambda2c*a42sq);
++                                  s1a4_sq = a41sq + lambda1*a41a42  + lambda2*a42sq;
++                                  s2a4_sq = a41sq + lambda1c*a41a42 + lambda2c*a42sq;
+@@ -973 +1238,18 @@
+-                                  if( (s1a4_mag<=B_a4) && (s2a4_mag<=B_a4c) )
++                                  // Same as: sqrt(s1a4_sq)<=B_a4 && sqrt(s2a4_sq)<=B_a4c
++#ifdef NF_COUNT
++                                  nfCnt[0]++;
++                                  if(s1a4_sq>=0.0 && s1a4_sq<=T_a4) nfCnt[1]++;
++                                  if(s1a4_sq>=0.0 && s1a4_sq<=T_a4 && s2a4_sq>=0.0 && s2a4_sq<=T_a4c) nfCnt[2]++;
++#endif
++#ifdef NF_CHECK_PRUNE
++                                  if( (m1<chk_lo || m1>chk_hi) &&
++                                      s1a4_sq>=0.0 && s1a4_sq<=T_a4 && s2a4_sq>=0.0 && s2a4_sq<=T_a4c ) {
++                                    fprintf(stderr, "NF_CHECK_PRUNE: m1=%lld passes outside [%lld,%lld]\n", m1, chk_lo, chk_hi);
++                                    exit(5); }
++#endif
++#ifdef NF_CHECK_SQRT
++                                  if( ((sqrt(s1a4_sq)<=B_a4) && (sqrt(s2a4_sq)<=B_a4c)) !=
++                                      (s1a4_sq>=0.0 && s1a4_sq<=T_a4 && s2a4_sq>=0.0 && s2a4_sq<=T_a4c) ) {
++                                    fprintf(stderr, "NF_CHECK_SQRT mismatch (a4)\n");  exit(4); }
++#endif
++                                  if( s1a4_sq>=0.0 && s1a4_sq<=T_a4 && s2a4_sq>=0.0 && s2a4_sq<=T_a4c )
+@@ -1026,0 +1309,2 @@
++                                                    if(nfUseGpu)  { ++nfRefCount; }
++                                                    else {
+@@ -1056,0 +1341 @@
++                                                      }  // end of CPU-only buffering
+@@ -1067,0 +1353,2 @@
++                                // Leave m1 where the unpruned loop would have (used by the final checkpoint).
++                                m1 = (m1_L > m1_U) ? m1_L : m1_U + 1;
+@@ -1093,0 +1381,2 @@
++  if(nfUseGpu)  nfGpuFlushBatch(0,0,0,0,0,0,0, StatVec, outfile, true);
++
+@@ -1142,0 +1432 @@
++
+@@ -1241 +1531,63 @@
+-  int status = polDiscTest_cpu(polBufNow, numPolysNow, polGoodFlag, NULL, numPrimes, pSet);
++  // Exact modular pre-filter (pdfilter.f90): clears the flag only for polynomials
++  // that provably fail; the original GMP test then runs on the survivors.
++  static int pdfReady = 0;
++  static int noFilter = 0;
++  static long long maxPolys = 0;
++  static double tPd = 0, tPrev = 0, tStart = 0;
++  if(!pdfReady) {
++    nfPdfSetup(numPrimes, pSet);
++    pdfReady = 1;
++    const char *v = getenv("NF_NOFILTER");  noFilter = (v && *v=='1');
++    v = getenv("NF_MAXPOLYS");  if(v) maxPolys = atoll(v);
++    tStart = tPrev = nfNow();
++    nfProfStart = tStart;
++    atexit(nfProfReport);
++    }
++  double t0 = nfNow();
++  int status;
++  static int dumped = 0;
++  if(!dumped) {  // NF_DUMP=n: print the first n polynomials of the first batch (debug aid)
++    const char *v = getenv("NF_DUMP");
++    int nd = v ? atoi(v) : 0;
++    for(int k=0; k<nd && k<numPolysNow; k++) {
++      fprintf(stderr, "NF_DUMP");
++      for(int c=0; c<11; c++) fprintf(stderr, " %lld", polBufNow[k*11+c]);
++      fprintf(stderr, "\n");
++      }
++    dumped = 1;
++    }
++  if(noFilter) {
++    status = polDiscTest_cpu(polBufNow, numPolysNow, polGoodFlag, NULL, numPrimes, pSet);
++    }
++  else {
++    nfPdfFilter(polBufNow, numPolysNow, (signed char*)polGoodFlag);
++    status = polDiscTest_cpu(polBufNow, numPolysNow, polGoodFlag, polGoodFlag, numPrimes, pSet);
++    }
++  tPd += nfNow() - t0;
++  nfProfPd = tPd;
++  if(maxPolys>0 && *polCount + numPolysNow >= maxPolys) {
++    long long passed = 0;
++    for(int k=0; k<numPolysNow; k++) passed += polGoodFlag[k];
++    double tot = nfNow() - tStart;
++    fprintf(stderr, "NF_PROFILE polys=%lld total=%.3f s polDisc=%.3f s enum+rest=%.3f s (last batch passed=%lld)\n",
++            *polCount + numPolysNow, tot, tPd, tot - tPd, passed);
++    printf("NF_PROFILE polys=%lld total=%.3f s polDisc=%.3f s enum+rest=%.3f s\n",
++            *polCount + numPolysNow, tot, tPd, tot - tPd);
++    exit(0);
++    }
++
++  // NF_VERIFY=1: also run the exact test on every polynomial and make sure the
++  // filter never rejected one that passes.
++  static int verify = -1;
++  if(verify<0) { const char *v = getenv("NF_VERIFY"); verify = (v && *v=='1'); }
++  if(verify && numPolysNow>0) {
++    char *exact = (char*)malloc(numPolysNow);
++    polDiscTest_cpu(polBufNow, numPolysNow, exact, NULL, numPrimes, pSet);
++    for(int k=0; k<numPolysNow; k++) {
++      if(exact[k] != polGoodFlag[k]) {
++        fprintf(stderr, "NF_VERIFY MISMATCH at poly %d: exact=%d filtered=%d\n", k, exact[k], polGoodFlag[k]);
++        exit(3);
++        }
++      }
++    free(exact);
++    }
+diff -U0 -r a/GetDecicsSrc/TgtMartinet.h b/GetDecicsSrc/TgtMartinet.h
+--- a/GetDecicsSrc/TgtMartinet.h	2026-10-08 11:57:57.375431778 +0300
++++ b/GetDecicsSrc/TgtMartinet.h	2026-10-08 11:57:57.386141550 +0300
+@@ -23,0 +24,12 @@
++// pdfilter.f90 is built once per instruction-set level on x86-64 (AVX2+FMA and
++// baseline SSE2) and picked at run time; elsewhere there is a single build.
++#if defined(__x86_64__) || defined(_M_X64)
++#  define NF_PDF_DISPATCH 1
++extern "C" void pdf_init_v3(int, const int*);
++extern "C" void pdf_filter_v3(const long long*, int, signed char*);
++extern "C" void pdf_init_base(int, const int*);
++extern "C" void pdf_filter_base(const long long*, int, signed char*);
++#else
++extern "C" void pdf_init(int, const int*);
++extern "C" void pdf_filter(const long long*, int, signed char*);
++#endif
