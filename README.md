@@ -29,13 +29,16 @@ The number after the prefix is the version (`020` = v0.2.0).
 | starts with | what it is | who it is for |
 |---|---|---|
 | **`CPU_`** | the CPU app only | **everybody** — no graphics card needed |
+| **`GPU_`** | the OpenCL GPU app only, with an `app_config.xml` | anyone with an **NVIDIA, AMD or Intel** card that has double-precision OpenCL |
 | **`CPU-GPU_`** | **both in one package**: the CPU app *and* the OpenCL GPU app, with an `app_info.xml` that lists both and an `app_config.xml` for the GPU | anyone with an **NVIDIA, AMD or Intel** card that has double-precision OpenCL — BOINC runs the GPU app on the card and the CPU app on the processor |
 
 | Package | System | Notes |
 |---|---|---|
 | 🪟 `CPU_…_windows_x86-64.zip` | Windows 64-bit | one `.exe`, picks AVX2 or plain code at run time |
 | 🪟 `CPU-GPU_…_windows_x86-64.zip` | Windows 64-bit + OpenCL driver | CPU `.exe` + GPU `.exe` + `app_info.xml` + `app_config.xml` |
+| 🪟 `GPU_…_windows_x86-64.zip` | Windows 64-bit + OpenCL driver | GPU `.exe` + `app_info.xml` + `app_config.xml` |
 | 🐧 `CPU_…_linux_x86-64.tar.gz` | Linux 64-bit, any distribution | fully static |
+| 🐧 `GPU_…_linux_x86-64.tar.gz` | Linux 64-bit, glibc 2.34+ (Ubuntu 22.04 and newer) | GPU only, same layout |
 | 🐧 `CPU-GPU_…_linux_x86-64.tar.gz` | Linux 64-bit, glibc 2.34+ (Ubuntu 22.04 and newer) | CPU + GPU, same layout |
 
 macOS and ARM builds are not available yet.
