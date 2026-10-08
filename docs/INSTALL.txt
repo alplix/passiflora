@@ -5,37 +5,28 @@ version is 10-25x faster on one core, the GPU version finishes a work unit in se
 
 WHICH FILE DO I DOWNLOAD?
 -------------------------
-  CPU_...            the normal app, no graphics card needed. Take this if unsure.
-  GPU-OpenCL_...     the same plus the version that uses an NVIDIA, AMD or Intel card
-                     (needs a card with double-precision OpenCL and a driver that provides OpenCL).
+  CPU_...        the CPU app only. No graphics card needed.
+  CPU-GPU_...    BOTH in one package: the CPU app and the GPU app (OpenCL: NVIDIA, AMD, Intel),
+                 with an app_info.xml that lists both and an app_config.xml for the GPU.
+                 BOINC runs the GPU app on a card and the CPU app on the processor.
 
   ..._windows_x86-64.zip       Windows 64-bit
-  ..._linux_x86-64.tar.gz      Linux 64-bit (GPU package: glibc 2.34+, i.e. Ubuntu 22.04 or newer)
+  ..._linux_x86-64.tar.gz      Linux 64-bit (CPU-GPU package: glibc 2.34+, i.e. Ubuntu 22.04 or newer)
 
-Verify the download with SHA256SUMS. macOS and ARM are not available yet.
-
-BEFORE YOU START - READ THIS
-----------------------------
-* This is a BOINC "anonymous platform" app. It has been run with the upstream test work units
-  and a stand-in for the BOINC client, NOT yet in a real BOINC client against the live
-  NumberFields server. Whether the project accepts results from anonymous-platform apps is up to
-  the project. Run ONE task first and check that it validates before leaving it running.
-* Once app_info.xml is in the project folder, the client only gets tasks for the versions listed in
-  it. Tasks you already have for the stock app may be lost, so let them finish (set "No new tasks")
-  or abort them first.
-* The app finishes tasks much faster than the stock app and so earns much more credit per hour.
-  Please be fair to other volunteers and let the project know that you use it.
-* Do not switch between the CPU app, the GPU app and the stock app in the middle of a task.
+Verify the download with SHA256SUMS.
 
 INSTALL - WINDOWS
 -----------------
-1. BOINC Manager: Projects -> NumberFields@home -> "No new tasks". Let your tasks finish.
+1. BOINC Manager: Projects -> NumberFields@home -> "No new tasks". Let the tasks you have finish
+   (or abort them): tasks of the stock app cannot continue once app_info.xml is in place.
 2. BOINC Manager: File -> Exit BOINC (tick "Stop running tasks").
-3. Unzip the package and copy everything inside the folder (the .exe file(s) and app_info.xml)
+3. Unzip the package and copy everything inside the folder (the .exe file(s), app_info.xml and,
+   in the CPU-GPU package, app_config.xml)
    into   C:\ProgramData\BOINC\projects\numberfields.asu.edu_NumberFields\
    (ProgramData is a hidden folder: type it into the address bar.)
 4. Start BOINC Manager and choose "Allow new tasks".
-5. Open the first new task's properties: the app version shows as 4.00 (CPU) or 4.02 (GPU).
+5. The version of a new task shows as 4.00 (CPU) or 4.02 (GPU); the stderr of a GPU task has a line
+   "GPU mode: OpenCL device ..." naming the card.
 
 INSTALL - LINUX
 ---------------
@@ -43,23 +34,26 @@ INSTALL - LINUX
 2. sudo systemctl stop boinc-client
 3. tar xzf the package, then copy its files into the project folder
    (Debian/Ubuntu: /var/lib/boinc-client/projects/numberfields.asu.edu_NumberFields/):
-     sudo cp run_passiflora_linux_x86-64*/GetDecics_passiflora* run_passiflora_linux_x86-64*/app_info.xml <folder>/
-     sudo chown boinc:boinc <folder>/GetDecics_passiflora* <folder>/app_info.xml
+     sudo cp run_passiflora_linux_x86-64*/GetDecics_passiflora* run_passiflora_linux_x86-64*/*.xml <folder>/
+     sudo chown boinc:boinc <folder>/GetDecics_passiflora* <folder>/*.xml
      sudo chmod +x <folder>/GetDecics_passiflora*
 4. sudo systemctl start boinc-client ; boinccmd --project https://numberfields.asu.edu/NumberFields/ allowmorework
 
-GPU NOTES
----------
-* One program serves NVIDIA, AMD and Intel (OpenCL). BOINC chooses the card.
-* If the card has no double-precision support or no usable OpenCL driver, the task fails at
-  start-up with a message in stderr ("GPU mode: ..." line tells which device was used). Use the
-  CPU package instead.
-* Tested on real hardware: Windows + NVIDIA RTX 5070 Ti. Linux was only run on a CPU OpenCL
-  implementation (pocl); AMD and Intel cards are untested.
+GPU
+---
+* One program serves NVIDIA, AMD and Intel (OpenCL); BOINC chooses the card. The card needs
+  double-precision OpenCL support and a driver that provides OpenCL (Windows: OpenCL.dll comes with
+  the driver; Linux: libOpenCL.so.1 plus the vendor's OpenCL runtime).
+* app_config.xml runs 4 tasks per card (gpu_usage 0.25): while one task is busy on the processor
+  (the exact checks of the few candidates), the others keep the card working. Change
+  <gpu_usage> to 1 for one task per card, 0.5 for two, 0.125 for eight; each task uses about
+  150 MB of video memory and one CPU core (<cpu_usage>).
+  In BOINC Manager: Options -> Read config files after editing.
 
 UNINSTALL
 ---------
-Stop BOINC, delete app_info.xml and the GetDecics_passiflora* file(s) from the project folder, start BOINC.
+Stop BOINC, delete app_info.xml, app_config.xml and the GetDecics_passiflora* file(s) from the project
+folder, start BOINC.
 
 Source and details: https://github.com/alplix/passiflora   (licence GPL-2.0-or-later)
 Original application: Eric Driver, https://github.com/drivere/get-decics-numberfields

@@ -28,15 +28,15 @@ The number after the prefix is the version (`020` = v0.2.0).
 
 | starts with | what it is | who it is for |
 |---|---|---|
-| **`CPU_`** | the normal app, runs on the processor | **everybody** — no graphics card needed |
-| **`GPU-OpenCL_`** | the CPU app **plus** the OpenCL version that uses an **NVIDIA, AMD or Intel** graphics card | anyone with a card that has double-precision support |
+| **`CPU_`** | the CPU app only | **everybody** — no graphics card needed |
+| **`CPU-GPU_`** | **both in one package**: the CPU app *and* the OpenCL GPU app, with an `app_info.xml` that lists both and an `app_config.xml` for the GPU | anyone with an **NVIDIA, AMD or Intel** card that has double-precision OpenCL — BOINC runs the GPU app on the card and the CPU app on the processor |
 
 | Package | System | Notes |
 |---|---|---|
 | 🪟 `CPU_…_windows_x86-64.zip` | Windows 64-bit | one `.exe`, picks AVX2 or plain code at run time |
-| 🪟 `GPU-OpenCL_…_windows_x86-64.zip` | Windows 64-bit + OpenCL driver | NVIDIA tested on real hardware (RTX 5070 Ti); AMD and Intel untested |
+| 🪟 `CPU-GPU_…_windows_x86-64.zip` | Windows 64-bit + OpenCL driver | CPU `.exe` + GPU `.exe` + `app_info.xml` + `app_config.xml` |
 | 🐧 `CPU_…_linux_x86-64.tar.gz` | Linux 64-bit, any distribution | fully static |
-| 🐧 `GPU-OpenCL_…_linux_x86-64.tar.gz` | Linux 64-bit, glibc 2.34+ (Ubuntu 22.04 and newer) | tested with `pocl` only, **not on a real GPU yet** |
+| 🐧 `CPU-GPU_…_linux_x86-64.tar.gz` | Linux 64-bit, glibc 2.34+ (Ubuntu 22.04 and newer) | CPU + GPU, same layout |
 
 macOS and ARM builds are not available yet.
 
@@ -73,19 +73,6 @@ Yes — byte for byte, apart from the "Elapsed Time" line:
   polynomials that are provably not solutions, and everything that is not rejected
   goes through the original test unchanged. See [TECHNICAL](docs/TECHNICAL.md).
 * Checkpoint/restart was tested by killing runs mid-way (CPU and GPU).
-
-### ⚠️ What has *not* been tested yet
-
-* Passiflora has been run with the upstream test work units and a stand-in for the
-  BOINC client — **not yet in a real BOINC client against the live NumberFields
-  server**. Whether the project accepts results from the anonymous platform is up to
-  the project. **Please run a single task first and check that it validates before
-  letting it run for days.**
-* Do not switch between the CPU app, the GPU app and the stock app in the middle of
-  a task: checkpoints are only compatible between runs of the same kind.
-* Linux GPU, AMD GPUs and Intel GPUs: built, but not run on real hardware.
-* Passiflora finishes tasks far faster than the stock app, so it earns far more credit
-  per hour. Please be fair to other volunteers and tell the project that you use it.
 
 ---
 

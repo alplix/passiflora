@@ -48,6 +48,25 @@ def app_info(platform, cpu_exe, gpu_exe=None):
     parts += ["</app_info>", ""]
     return "\n".join(parts)
 
+APP_CONFIG = """<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  app_config.xml - Passiflora GPU: runs 4 tasks per graphics card.
+  While one task is busy on the processor (the exact checks of the few candidates), the others keep the
+  card working.  gpu_usage 1 = one task per card, 0.5 = two, 0.25 = four, 0.125 = eight.
+  Each task uses about 150 MB of video memory and cpu_usage CPU cores.
+  BOINC Manager: Options -> Read config files, after editing.
+-->
+<app_config>
+  <app>
+    <name>GetDecics</name>
+    <gpu_versions>
+      <gpu_usage>0.25</gpu_usage>
+      <cpu_usage>1</cpu_usage>
+    </gpu_versions>
+  </app>
+</app_config>
+"""
+
 def readme(kind, windows, gpu):
     pd = (r"C:\ProgramData\BOINC\projects\numberfields.asu.edu_NumberFields" if windows
           else "/var/lib/boinc-client/projects/numberfields.asu.edu_NumberFields")
@@ -57,24 +76,20 @@ def readme(kind, windows, gpu):
         "This folder contains the program file(s) and app_info.xml.",
         "Full instructions: INSTALL.txt on the release page, or https://github.com/alplix/passiflora", "",
         "1. In BOINC Manager set NumberFields@home to 'No new tasks' and let the tasks you",
-        "   already have finish (or abort them) - tasks of the stock app are not usable once",
-        "   the anonymous platform is switched on.",
+        "   already have finish (or abort them) - tasks of the stock app cannot continue once",
+        "   app_info.xml is in place.",
         "2. Exit BOINC (Windows: BOINC Manager -> File -> Exit, 'stop running tasks';",
         "   Linux: sudo systemctl stop boinc-client).",
-        "3. Copy everything in this folder (the program file(s) and app_info.xml) into:", "   " + pd,
+        "3. Copy everything in this folder (program file(s), app_info.xml" + (", app_config.xml" if gpu else "") + ") into:", "   " + pd,
     ]
     if not windows:
         lines += ["   then:  sudo chown boinc:boinc <the copied files>  &&  sudo chmod +x <the program files>"]
-    lines += ["4. Start BOINC again and allow new tasks.",
-              "5. Watch the FIRST task (Tasks tab, 'Properties'; stderr in the task details after it ends)",
-              "   before you let it run for days. Results are identical to the stock app, but this has",
-              "   not yet been run against the live project from a real client.", ""]
+    lines += ["4. Start BOINC again and allow new tasks.", ""]
     if gpu:
         lines += ["GPU: needs a graphics card with double-precision OpenCL (NVIDIA, AMD, Intel) and a",
-                  "driver that provides OpenCL. Do not switch between the CPU and the GPU program in",
-                  "the middle of a task.", ""]
-    lines += ["To go back to the stock app: stop BOINC, delete app_info.xml and the Passiflora",
-              "program files from that folder, start BOINC.", "",
+                  "driver that provides OpenCL. app_config.xml runs 4 tasks per card (see the comments in it).", ""]
+    lines += ["To go back to the stock app: stop BOINC, delete app_info.xml, app_config.xml and the",
+              "Passiflora program files from that folder, start BOINC.", "",
               "Licence: GPL-2.0-or-later. Source: https://github.com/alplix/passiflora", ""]
     return "\n".join(lines)
 
@@ -102,28 +117,32 @@ def main():
     # ---- Windows
     cpu_exe = "GetDecics_passiflora_%s_windows_x86_64.exe" % VER
     gpu_exe = "GetDecics_passiflora_gpu_%s_windows_x86_64.exe" % VER
-    for prefix, gpu in (("CPU", False), ("GPU-OpenCL", True)):
-        folder = "run_passiflora_windows_x86-64" + ("_opencl" if gpu else "")
+    for prefix, gpu in (("CPU", False), ("CPU-GPU", True)):
+        folder = "run_passiflora_windows_x86-64" + ("_cpu-gpu" if gpu else "")
         name = "%s_%s_run_passiflora_windows_x86-64.zip" % (prefix, V3)
         with zipfile.ZipFile(os.path.join(DIST, name), "w") as zf:
             add_zip(zf, folder, cpu_exe, read(SRC["win_cpu"]))
             if gpu:
                 add_zip(zf, folder, gpu_exe, read(SRC["win_gpu"]))
             add_zip(zf, folder, "app_info.xml", app_info("windows_x86_64", cpu_exe, gpu_exe if gpu else None).replace("\n", "\r\n").encode())
+            if gpu:
+                add_zip(zf, folder, "app_config.xml", APP_CONFIG.replace("\n", "\r\n").encode())
             add_zip(zf, folder, "README.txt", readme("Windows x86-64" + (" + OpenCL GPU" if gpu else ""), True, gpu).replace("\n", "\r\n").encode())
             add_zip(zf, folder, "LICENSE.txt", read(os.path.join(ROOT, "LICENSE")))
         out.append(name)
     # ---- Linux
     cpu_exe = "GetDecics_passiflora_%s_x86_64-pc-linux-gnu" % VER
     gpu_exe = "GetDecics_passiflora_gpu_%s_x86_64-pc-linux-gnu" % VER
-    for prefix, gpu in (("CPU", False), ("GPU-OpenCL", True)):
-        folder = "run_passiflora_linux_x86-64" + ("_opencl" if gpu else "")
+    for prefix, gpu in (("CPU", False), ("CPU-GPU", True)):
+        folder = "run_passiflora_linux_x86-64" + ("_cpu-gpu" if gpu else "")
         name = "%s_%s_run_passiflora_linux_x86-64.tar.gz" % (prefix, V3)
         with tarfile.open(os.path.join(DIST, name), "w:gz") as tf:
             add_tar(tf, folder, cpu_exe, read(SRC["lin_cpu"]), 0o755)
             if gpu:
                 add_tar(tf, folder, gpu_exe, read(SRC["lin_gpu"]), 0o755)
             add_tar(tf, folder, "app_info.xml", app_info("x86_64-pc-linux-gnu", cpu_exe, gpu_exe if gpu else None).encode(), 0o644)
+            if gpu:
+                add_tar(tf, folder, "app_config.xml", APP_CONFIG.encode(), 0o644)
             add_tar(tf, folder, "README.txt", readme("Linux x86-64" + (" + OpenCL GPU" if gpu else ""), False, gpu).encode(), 0o644)
             add_tar(tf, folder, "LICENSE.txt", read(os.path.join(ROOT, "LICENSE")), 0o644)
         out.append(name)
