@@ -4,7 +4,7 @@
 # Builds the release packages in dist/ from the four executables
 # (reference script: edit the paths in SRC for your own build).
 
-import hashlib, io, os, sys, tarfile, zipfile
+import hashlib, io, os, sys, tarfile, time, zipfile
 
 VER = "0.1.0"
 V3 = "010"
@@ -18,6 +18,7 @@ SRC = {
 }
 
 APP = "GetDecics"
+NOW = int(time.time()) - 60
 
 def app_version(version, platform, exe, plan=None, coproc=None):
     s = ["  <app_version>",
@@ -78,14 +79,14 @@ def readme(kind, windows, gpu):
     return "\n".join(lines)
 
 def add_zip(zf, folder, name, data):
-    zi = zipfile.ZipInfo(folder + "/" + name, date_time=(2026, 10, 8, 12, 0, 0))
+    zi = zipfile.ZipInfo(folder + "/" + name, date_time=time.localtime(NOW)[:6])
     zi.external_attr = 0o755 << 16
     zi.compress_type = zipfile.ZIP_DEFLATED
     zf.writestr(zi, data)
 
 def add_tar(tf, folder, name, data, mode):
     ti = tarfile.TarInfo(folder + "/" + name)
-    ti.size = len(data); ti.mode = mode; ti.mtime = 1791460800; ti.uname = ti.gname = "root"
+    ti.size = len(data); ti.mode = mode; ti.mtime = NOW; ti.uname = ti.gname = "root"
     tf.addfile(ti, io.BytesIO(data))
 
 def read(p):
