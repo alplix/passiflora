@@ -433,3 +433,41 @@ diff -U0 -r a/GetDecicsSrc/TgtMartinet.h b/GetDecicsSrc/TgtMartinet.h
 +extern "C" void pdf_init(int, const int*);
 +extern "C" void pdf_filter(const long long*, int, signed char*);
 +#endif
+diff -U0 -r a/GetDecicsSrc/polDiscTest_cpu.cpp b/GetDecicsSrc/polDiscTest_cpu.cpp
+--- a/GetDecicsSrc/polDiscTest_cpu.cpp	2026-10-12 14:17:57.746523205 +0300
++++ b/GetDecicsSrc/polDiscTest_cpu.cpp	2026-10-12 14:17:57.750837517 +0300
+@@ -8,0 +9,6 @@
++#include <limits.h>
++
++// Where a C long is only 32 bits (32-bit ARM, ...) mpz_set_si cannot take the 64-bit coefficients: use mpz_set_int64.
++#if !defined(MINGW) && (ULONG_MAX == 0xFFFFFFFFUL)
++#define NF_LONG32
++#endif
+@@ -48 +54 @@
+-#ifdef MINGW
++#if defined(MINGW) || defined(NF_LONG32)
+@@ -214 +220 @@
+-      #ifndef MINGW
++      #if !defined(MINGW) && !defined(NF_LONG32)
+@@ -251 +257 @@
+-      #ifndef MINGW
++      #if !defined(MINGW) && !defined(NF_LONG32)
+@@ -273 +279 @@
+-      #ifndef MINGW
++      #if !defined(MINGW) && !defined(NF_LONG32)
+@@ -293 +299 @@
+-    #ifndef MINGW
++    #if !defined(MINGW) && !defined(NF_LONG32)
+@@ -773,0 +780,12 @@
++
++#ifdef NF_LONG32
++// longs (and the GMP limbs) are 32 bits: build the 64-bit value from two halves.
++inline void mpz_set_int64(mpz_t mpA, int64_t A)
++{
++  uint64_t u = (A<0) ? (uint64_t)0 - (uint64_t)A : (uint64_t)A;
++  mpz_set_ui(mpA, (unsigned long)(u >> 32));
++  mpz_mul_2exp(mpA, mpA, 32);
++  mpz_add_ui(mpA, mpA, (unsigned long)(u & 0xFFFFFFFFULL));
++  if(A<0) mpz_neg(mpA, mpA);
++}
++#endif
