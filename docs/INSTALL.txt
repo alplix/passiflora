@@ -17,6 +17,9 @@ WHICH FILE DO I DOWNLOAD?
   ..._linux_x86-64.tar.gz      Linux 64-bit (GPU packages: glibc 2.34+, i.e. Ubuntu 22.04 or newer)
   ..._linux_aarch64.tar.gz     Linux 64-bit ARM (Raspberry Pi 4/5, Ampere, Graviton, ...; glibc 2.34+ for GPU)
   ..._macos_arm64.tar.gz       macOS on Apple silicon (M1 and newer), CPU only (Apple GPUs have no double precision)
+  ..._linux_riscv64.tar.gz     Linux RISC-V 64-bit, CPU only
+  ..._linux_ppc64le.tar.gz     Linux PowerPC 64-bit little endian (POWER8 and newer), CPU only
+  ..._linux_s390x.tar.gz       Linux IBM Z, CPU only
 
 Verify the download with SHA256SUMS.
 
@@ -33,7 +36,7 @@ INSTALL - WINDOWS
 5. The version of a new task shows as 4.00 (CPU) or 4.02 (GPU); the stderr of a GPU task has a line
    "GPU mode: ... device ..." naming the card.
 
-INSTALL - LINUX (x86-64 and aarch64)
+INSTALL - LINUX (x86-64, aarch64, riscv64, ppc64le, s390x)
 ------------------------------------
 1. boinccmd --project https://numberfields.asu.edu/NumberFields/ nomorework   (let tasks finish)
 2. sudo systemctl stop boinc-client

@@ -8,8 +8,8 @@
 #   GPU-CUDA_        the CUDA GPU app only (NVIDIA)
 #   CPU-GPU-CUDA_    CPU + CUDA in one package
 #   GPU-MUSA_        the Moore Threads (MUSA) app, which also runs on the CPU
-# Systems: windows_x86-64, linux_x86-64, linux_aarch64, macos_arm64.
-# Set PASSIFLORA_<WIN|LIN|A64|MAC>_<CPU|GPU|CUDA|MUSA> to the executables (a package is skipped if one is missing);
+# Systems: windows_x86-64, linux_x86-64, linux_aarch64, macos_arm64, linux_riscv64, linux_ppc64le, linux_s390x, linux_armhf.
+# Set PASSIFLORA_<WIN|LIN|A64|MAC|RV64|PPC64|S390X|ARM32>_<CPU|GPU|CUDA|MUSA> to the executables (a package is skipped if one is missing);
 # PASSIFLORA_LIN_MUSA is a directory holding GetDecics_musa, libnf_musa.so and libmusart.so.4.
 
 import hashlib, io, os, sys, tarfile, time, zipfile
@@ -42,6 +42,18 @@ SYSTEMS = (
          datadir="/var/lib/boinc-client/projects/numberfields.asu.edu_NumberFields"),
     dict(key="A64", osname="linux_aarch64", platforms=["aarch64-unknown-linux-gnu"], system="Linux aarch64", windows=False,
          exe="GetDecics_passiflora_%s%s_aarch64-unknown-linux-gnu", kinds=["CPU", "GPU", "CPU-GPU"],
+         datadir="/var/lib/boinc-client/projects/numberfields.asu.edu_NumberFields"),
+    dict(key="RV64", osname="linux_riscv64", platforms=["riscv64-unknown-linux-gnu"], system="Linux RISC-V 64", windows=False,
+         exe="GetDecics_passiflora_%s%s_riscv64-unknown-linux-gnu", kinds=["CPU"],
+         datadir="/var/lib/boinc-client/projects/numberfields.asu.edu_NumberFields"),
+    dict(key="PPC64", osname="linux_ppc64le", platforms=["powerpc64le-unknown-linux-gnu"], system="Linux PowerPC 64 (little endian)",
+         windows=False, exe="GetDecics_passiflora_%s%s_powerpc64le-unknown-linux-gnu", kinds=["CPU"],
+         datadir="/var/lib/boinc-client/projects/numberfields.asu.edu_NumberFields"),
+    dict(key="S390X", osname="linux_s390x", platforms=["s390x-ibm-linux-gnu", "s390x-unknown-linux-gnu"], system="Linux IBM Z (s390x)",
+         windows=False, exe="GetDecics_passiflora_%s%s_s390x-ibm-linux-gnu", kinds=["CPU"],
+         datadir="/var/lib/boinc-client/projects/numberfields.asu.edu_NumberFields"),
+    dict(key="ARM32", osname="linux_armhf", platforms=["arm-unknown-linux-gnueabihf"], system="Linux ARM 32-bit (armhf)",
+         windows=False, exe="GetDecics_passiflora_%s%s_arm-unknown-linux-gnueabihf", kinds=["CPU"],
          datadir="/var/lib/boinc-client/projects/numberfields.asu.edu_NumberFields"),
     dict(key="MAC", osname="macos_arm64", platforms=["arm64-apple-darwin", "x86_64-apple-darwin"], system="macOS Apple silicon",
          windows=False, exe="GetDecics_passiflora_%s%s_arm64-apple-darwin", kinds=["CPU"],
@@ -232,7 +244,7 @@ def main():
             out.append(name)
 
     with open(os.path.join(DIST, "SHA256SUMS"), "w", newline="\n") as f:
-        for n in sorted(out):
+        for n in sorted(x for x in os.listdir(DIST) if "_%s_run_passiflora_" % V3 in x):   # all packages of this version
             f.write("%s  %s\n" % (hashlib.sha256(read(os.path.join(DIST, n))).hexdigest(), n))
     print("\n".join(sorted(out)))
 
