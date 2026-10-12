@@ -3,6 +3,9 @@
 Passiflora is a set of files that you add to the upstream source, plus a small patch.
 Nothing of upstream is copied into this repository.
 
+The quickest route is `build/prepare-src.sh`: it copies the five upstream files that are needed, applies
+`patches/passiflora.patch` and adds `src/` (set `UPSTREAM` to your checkout). The steps below do the same by hand.
+
 ## 1. Get the sources
 
 ```bash
@@ -52,8 +55,12 @@ g++ -O3 -static -o GetDecics_cpu GetDecics.o TgtMartinet.o polDiscTest_cpu.o nf_
 Do **not** add `-march`, `-ffast-math` or FMA contraction to the C++ files: the enumeration
 must evaluate its floating-point bounds exactly as upstream does.
 
-GPU build: embed the kernel (`nf_enum_cl.h` is `R"NFCL(` + `nf_enum.cl` + `)NFCL"`), compile
-`nf_gpu.cpp` instead of the stub, and link `libboinc_opencl.a` and `-lOpenCL` (everything else
+CUDA kernel: `build/build-cuda-kernel.sh` compiles `src/nf_kernel.cu` with `nvcc --fmad=false` (CUDA 12.x, with a host
+gcc <= 13; Ubuntu 22.04's gcc 11 works) and writes `src/nf_cuda_fatbin.h`; compile `nf_gpu_common.cpp` and
+`nf_gpu_cuda.cpp` instead of the stub and link `-ldl` on Linux (nothing from CUDA is linked).
+
+OpenCL GPU build: embed the kernel (`nf_enum_cl.h` is `R"NFCL(` + `nf_port_opencl.h` + `nf_kernel.h` + `)NFCL"`), compile
+`nf_gpu_common.cpp` and `nf_gpu_opencl.cpp` instead of the stub, and link `libboinc_opencl.a` and `-lOpenCL` (everything else
 static). To keep the binary usable on older distributions build in an Ubuntu 22.04 environment
 (glibc 2.34).
 

@@ -7,12 +7,14 @@ WHICH FILE DO I DOWNLOAD?
 -------------------------
   CPU_...        the CPU app only. No graphics card needed.
   GPU_...        the GPU app only (OpenCL: NVIDIA, AMD, Intel), with an app_config.xml.
+  GPU-CUDA_...   the GPU app for NVIDIA cards through CUDA (needs only the NVIDIA driver).
+  CPU-GPU-CUDA_  the CPU app and the CUDA app in one package.
   CPU-GPU_...    BOTH in one package: the CPU app and the GPU app, with an app_info.xml that
                  lists both and an app_config.xml for the GPU. BOINC runs the GPU app on a card
                  and the CPU app on the processor.
 
   ..._windows_x86-64.zip       Windows 64-bit
-  ..._linux_x86-64.tar.gz      Linux 64-bit (GPU and CPU-GPU packages: glibc 2.34+, i.e. Ubuntu 22.04 or newer)
+  ..._linux_x86-64.tar.gz      Linux 64-bit (all GPU packages: glibc 2.34+, i.e. Ubuntu 22.04 or newer)
 
 Verify the download with SHA256SUMS.
 

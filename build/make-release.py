@@ -1,29 +1,27 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 # Copyright (C) 2026 Alperen Yavuz
 #
-# Builds the release packages in dist/ from the four executables.  Three packages per system:
-#   CPU_      the CPU app only
-#   GPU_      the OpenCL GPU app only
-#   CPU-GPU_  both in one package
-# Set PASSIFLORA_WIN_CPU, PASSIFLORA_WIN_GPU, PASSIFLORA_LIN_CPU, PASSIFLORA_LIN_GPU to the executables.
+# Builds the release packages in dist/ from the executables.  Per system:
+#   CPU_             the CPU app only
+#   GPU_             the OpenCL GPU app only (NVIDIA, AMD, Intel)
+#   CPU-GPU_         CPU + OpenCL in one package
+#   GPU-CUDA_        the CUDA GPU app only (NVIDIA)
+#   CPU-GPU-CUDA_    CPU + CUDA in one package
+# Set PASSIFLORA_<WIN|LIN>_<CPU|GPU|CUDA> to the executables (a package is skipped if one is missing).
 
 import hashlib, io, os, sys, tarfile, time, zipfile
 
-VER = "0.1.0"
-V3 = "010"
+VER = "0.2.0"
+V3 = "020"
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DIST = os.path.join(ROOT, "dist")
-SRC = {
-    "win_cpu": os.environ.get("PASSIFLORA_WIN_CPU"),
-    "win_gpu": os.environ.get("PASSIFLORA_WIN_GPU"),
-    "lin_cpu": os.environ.get("PASSIFLORA_LIN_CPU"),
-    "lin_gpu": os.environ.get("PASSIFLORA_LIN_GPU"),
-}
 
 APP = "GetDecics"
 NOW = int(time.time()) - 60
 
-KINDS = (("CPU", True, False), ("GPU", False, True), ("CPU-GPU", True, True))
+# (prefix, cpu, opencl, cuda)
+KINDS = (("CPU", True, False, False), ("GPU", False, True, False), ("CPU-GPU", True, True, False),
+         ("GPU-CUDA", False, False, True), ("CPU-GPU-CUDA", True, False, True))
 
 APP_CONFIG = """<?xml version="1.0" encoding="UTF-8"?>
 <!--
@@ -61,23 +59,25 @@ def app_version(version, platform, exe, plan=None, coproc=None):
     return "\n".join(s)
 
 
-def app_info(platform, cpu_exe, gpu_exe):
+def app_info(platform, cpu_exe, ocl_exe, cuda_exe):
     parts = ["<app_info>", "  <app>", "    <name>%s</name>" % APP,
              "    <user_friendly_name>Get Decic Fields</user_friendly_name>", "  </app>", ""]
-    for e in (cpu_exe, gpu_exe):
+    for e in (cpu_exe, ocl_exe, cuda_exe):
         if e:
             parts += ["  <file_info>", "    <name>%s</name>" % e, "    <executable/>", "  </file_info>"]
     parts.append("")
     if cpu_exe:
         parts.append(app_version(400, platform, cpu_exe))
-    if gpu_exe:
+    if ocl_exe:
         for plan, cop in (("opencl_nvidia", "NVIDIA"), ("opencl_amd", "ATI"), ("opencl_intel_gpu", "intel_gpu")):
-            parts += ["", app_version(402, platform, gpu_exe, plan, cop)]
+            parts += ["", app_version(402, platform, ocl_exe, plan, cop)]
+    if cuda_exe:
+        parts += ["", app_version(402, platform, cuda_exe, "cuda30", "NVIDIA")]
     parts += ["</app_info>", ""]
     return "\n".join(parts)
 
 
-def readme(system, name, windows, cpu, gpu):
+def readme(system, name, windows, gpu, cuda):
     pd = (r"C:\ProgramData\BOINC\projects\numberfields.asu.edu_NumberFields" if windows
           else "/var/lib/boinc-client/projects/numberfields.asu.edu_NumberFields")
     files = "program file(s), app_info.xml" + (", app_config.xml" if gpu else "")
@@ -96,7 +96,10 @@ def readme(system, name, windows, cpu, gpu):
     if not windows:
         lines += ["   then:  sudo chown boinc:boinc <the copied files>  &&  sudo chmod +x <the program files>"]
     lines += ["4. Start BOINC again and allow new tasks.", ""]
-    if gpu:
+    if cuda:
+        lines += ["GPU: needs an NVIDIA graphics card with double-precision support and the NVIDIA driver",
+                  "(no CUDA toolkit needed). app_config.xml runs 4 tasks per card (see the comments in it).", ""]
+    elif gpu:
         lines += ["GPU: needs a graphics card with double-precision OpenCL (NVIDIA, AMD, Intel) and a",
                   "driver that provides OpenCL. app_config.xml runs 4 tasks per card (see the comments in it).", ""]
     lines += ["To go back to the stock app: stop BOINC, delete app_info.xml%s and the" % (", app_config.xml" if gpu else ""),
@@ -130,50 +133,53 @@ def crlf(s):
     return s.replace("\n", "\r\n").encode()
 
 
+def exe_path(key):
+    p = os.environ.get("PASSIFLORA_" + key)
+    return p if p and os.path.exists(p) else None
+
+
 def main():
     os.makedirs(DIST, exist_ok=True)
-    for k, v in SRC.items():
-        if not v or not os.path.exists(v):
-            sys.exit("set PASSIFLORA_%s to the executable" % k.upper())
     out = []
-
-    # ---- Windows
-    cpu_exe = "GetDecics_passiflora_%s_windows_x86_64.exe" % VER
-    gpu_exe = "GetDecics_passiflora_gpu_%s_windows_x86_64.exe" % VER
-    for prefix, cpu, gpu in KINDS:
-        folder = "run_passiflora_windows_x86-64_%s" % prefix.lower()
-        name = "%s_%s_run_passiflora_windows_x86-64.zip" % (prefix, V3)
-        with zipfile.ZipFile(os.path.join(DIST, name), "w") as zf:
-            if cpu:
-                add_zip(zf, folder, cpu_exe, read(SRC["win_cpu"]))
+    for osname, key, windows in (("windows_x86-64", "WIN", True), ("linux_x86-64", "LIN", False)):
+        src = {"cpu": exe_path(key + "_CPU"), "ocl": exe_path(key + "_GPU"), "cuda": exe_path(key + "_CUDA")}
+        if windows:
+            names = {"cpu": "GetDecics_passiflora_%s_windows_x86_64.exe" % VER,
+                     "ocl": "GetDecics_passiflora_gpu_%s_windows_x86_64.exe" % VER,
+                     "cuda": "GetDecics_passiflora_cuda_%s_windows_x86_64.exe" % VER}
+            platform, system = "windows_x86_64", "Windows x86-64"
+        else:
+            names = {"cpu": "GetDecics_passiflora_%s_x86_64-pc-linux-gnu" % VER,
+                     "ocl": "GetDecics_passiflora_gpu_%s_x86_64-pc-linux-gnu" % VER,
+                     "cuda": "GetDecics_passiflora_cuda_%s_x86_64-pc-linux-gnu" % VER}
+            platform, system = "x86_64-pc-linux-gnu", "Linux x86-64"
+        for prefix, cpu, ocl, cuda in KINDS:
+            need = [k for k, w in (("cpu", cpu), ("ocl", ocl), ("cuda", cuda)) if w]
+            if any(not src[k] for k in need):
+                continue
+            folder = "run_passiflora_%s_%s" % (osname, prefix.lower())
+            name = "%s_%s_run_passiflora_%s.%s" % (prefix, V3, osname, "zip" if windows else "tar.gz")
+            files = []
+            for k in need:
+                files.append((names[k], read(src[k]), 0o755))
+            info = app_info(platform, names["cpu"] if cpu else None, names["ocl"] if ocl else None,
+                            names["cuda"] if cuda else None)
+            files.append(("app_info.xml", crlf(info) if windows else info.encode(), 0o644))
+            gpu = ocl or cuda
             if gpu:
-                add_zip(zf, folder, gpu_exe, read(SRC["win_gpu"]))
-            add_zip(zf, folder, "app_info.xml",
-                    crlf(app_info("windows_x86_64", cpu_exe if cpu else None, gpu_exe if gpu else None)))
-            if gpu:
-                add_zip(zf, folder, "app_config.xml", crlf(APP_CONFIG))
-            add_zip(zf, folder, "README.txt", crlf(readme("Windows x86-64", prefix, True, cpu, gpu)))
-            add_zip(zf, folder, "LICENSE.txt", read(os.path.join(ROOT, "LICENSE")))
-        out.append(name)
-
-    # ---- Linux
-    cpu_exe = "GetDecics_passiflora_%s_x86_64-pc-linux-gnu" % VER
-    gpu_exe = "GetDecics_passiflora_gpu_%s_x86_64-pc-linux-gnu" % VER
-    for prefix, cpu, gpu in KINDS:
-        folder = "run_passiflora_linux_x86-64_%s" % prefix.lower()
-        name = "%s_%s_run_passiflora_linux_x86-64.tar.gz" % (prefix, V3)
-        with tarfile.open(os.path.join(DIST, name), "w:gz") as tf:
-            if cpu:
-                add_tar(tf, folder, cpu_exe, read(SRC["lin_cpu"]), 0o755)
-            if gpu:
-                add_tar(tf, folder, gpu_exe, read(SRC["lin_gpu"]), 0o755)
-            add_tar(tf, folder, "app_info.xml",
-                    app_info("x86_64-pc-linux-gnu", cpu_exe if cpu else None, gpu_exe if gpu else None).encode(), 0o644)
-            if gpu:
-                add_tar(tf, folder, "app_config.xml", APP_CONFIG.encode(), 0o644)
-            add_tar(tf, folder, "README.txt", readme("Linux x86-64", prefix, False, cpu, gpu).encode(), 0o644)
-            add_tar(tf, folder, "LICENSE.txt", read(os.path.join(ROOT, "LICENSE")), 0o644)
-        out.append(name)
+                files.append(("app_config.xml", crlf(APP_CONFIG) if windows else APP_CONFIG.encode(), 0o644))
+            rd = readme(system, prefix, windows, gpu, cuda)
+            files.append(("README.txt", crlf(rd) if windows else rd.encode(), 0o644))
+            files.append(("LICENSE.txt", read(os.path.join(ROOT, "LICENSE")), 0o644))
+            if windows:
+                with zipfile.ZipFile(os.path.join(DIST, name), "w") as zf:
+                    for n, d, m in files:
+                        add_zip(zf, folder, n, d)
+            else:
+                with tarfile.open(os.path.join(DIST, name), "w:gz") as tf:
+                    for n, d, m in files:
+                        add_tar(tf, folder, n, d, m)
+            out.append(name)
 
     with open(os.path.join(DIST, "SHA256SUMS"), "w", newline="\n") as f:
         for n in sorted(out):

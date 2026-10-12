@@ -52,7 +52,7 @@ contains an AVX2/FMA and a baseline (SSE2) copy and picks one at run time.
 The enumeration is compiled exactly like upstream (no FMA contraction), so all
 floating-point loop bounds are bit-identical.
 
-## 3. The GPU version (`src/nf_enum.cl`, `src/nf_gpu.cpp`)
+## 3. The GPU version (`src/nf_kernel.h`, `src/nf_gpu_*.cpp`)
 
 The stock GPU app offloads only the discriminant test and feeds it from one CPU thread
 (88 bytes per polynomial over PCIe, ~50 GB for one work unit), so a modern card idles.
@@ -76,6 +76,21 @@ Bit-for-bit agreement with the CPU code relies on:
 
 Checkpoints are written between batches and resume at the first node of the next
 batch. The batch size adapts to about 100 ms per kernel launch.
+
+## GPU back ends
+
+The kernel is written once (`src/nf_kernel.h`) in a small portable dialect of OpenCL C / CUDA C; a port header per
+back end maps the few differences (address spaces, atomics, `as_float`, 64-bit types):
+
+| Back end | Port header | Host code | Notes |
+|---|---|---|---|
+| OpenCL | `nf_port_opencl.h` | `nf_gpu_opencl.cpp` | kernel compiled at run time, `FP_CONTRACT OFF` |
+| CUDA | `nf_port_cuda.h` | `nf_gpu_cuda.cpp` | kernel compiled once with `nvcc --fmad=false` into a fat binary (cubin for sm_50 … sm_120 + PTX) that is embedded in the program and loaded through the CUDA *driver* API, which is itself loaded at run time (`nvcuda.dll` / `libcuda.so.1`): nothing CUDA is linked, so the program starts without a CUDA driver and falls back to the CPU |
+
+The queueing, batch sizing, filter-prime table and the sorting of the survivors are shared (`nf_gpu_common.cpp`);
+a back end implements the five functions of `nf_gpu_backend.h`. `nf_gpu_cuda.cpp` also builds against other
+CUDA-driver-API-compatible runtimes (`-DNF_DRV_PREFIX`, `-DNF_DRV_LIB`; HIP, MUSA) given the code object of that
+toolchain.
 
 ## Validation
 

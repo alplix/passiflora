@@ -29,7 +29,7 @@ The number after the prefix is the version (`020` = v0.2.0).
 | starts with | what it is | who it is for |
 |---|---|---|
 | **`CPU_`** | the CPU app only | **everybody** — no graphics card needed |
-| **`GPU_`** | the OpenCL GPU app only, with an `app_config.xml` | anyone with an **NVIDIA, AMD or Intel** card that has double-precision OpenCL |
+| **`GPU_`** | the OpenCL GPU app only (NVIDIA, AMD, Intel), with an `app_config.xml` | anyone with an **NVIDIA, AMD or Intel** card that has double-precision OpenCL |
 | **`CPU-GPU_`** | **both in one package**: the CPU app *and* the OpenCL GPU app, with an `app_info.xml` that lists both and an `app_config.xml` for the GPU | anyone with an **NVIDIA, AMD or Intel** card that has double-precision OpenCL — BOINC runs the GPU app on the card and the CPU app on the processor |
 
 | Package | System | Notes |
@@ -40,6 +40,13 @@ The number after the prefix is the version (`020` = v0.2.0).
 | 🐧 `CPU_…_linux_x86-64.tar.gz` | Linux 64-bit, any distribution | fully static |
 | 🐧 `GPU_…_linux_x86-64.tar.gz` | Linux 64-bit, glibc 2.34+ (Ubuntu 22.04 and newer) | GPU only, same layout |
 | 🐧 `CPU-GPU_…_linux_x86-64.tar.gz` | Linux 64-bit, glibc 2.34+ (Ubuntu 22.04 and newer) | CPU + GPU, same layout |
+
+**NVIDIA cards also have CUDA packages** (no CUDA toolkit needed, just the driver): `GPU-CUDA_` (CUDA only) and `CPU-GPU-CUDA_` (CPU + CUDA).
+
+| Package | System | Notes |
+|---|---|---|
+| 🪟 `GPU-CUDA_…_windows_x86-64.zip` / `CPU-GPU-CUDA_…` | Windows 64-bit + NVIDIA driver | CUDA `.exe` (all GPUs from Maxwell to Blackwell) |
+| 🐧 `GPU-CUDA_…_linux_x86-64.tar.gz` / `CPU-GPU-CUDA_…` | Linux 64-bit, glibc 2.34+ + NVIDIA driver | same |
 
 macOS and ARM builds are not available yet.
 
@@ -58,6 +65,8 @@ measured while other BOINC work was running on the same machine:
 | `sf3_DS-16x270_Grp74of3932160` | 1727 s | 72 s | – | **5.6 s** |
 | `sf3_DS-16x271-1_Grp99of2000000` | 508 s | 45 s | – | **7.2 s** |
 | all 31 test work units | ~47 000 s (est.) | 3155 s | – | **439 s** |
+
+The CUDA version on the same card runs all 31 test work units in **338 s** (OpenCL: 394 s).
 
 The stock GPU app only offloads one test and is fed by a single CPU thread, so on a
 modern card the card sits idle; Passiflora's GPU version runs the whole inner search

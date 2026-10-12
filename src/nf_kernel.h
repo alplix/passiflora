@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (C) 2026 Alperen Yavuz
-// nf_enum.cl -- GPU version of the innermost GetDecics enumeration (m2 / m1
+// nf_kernel.h -- portable source of the GPU kernel (OpenCL C and CUDA C).  GPU version of the innermost GetDecics enumeration (m2 / m1
 // loops of Mart52Engine_Tgt) fused with the small-prime Legendre pre-filter of
 // pdfilter.f90.
 //
@@ -15,11 +15,8 @@
 //   * integers: unsigned wrap-around arithmetic, like the CPU's long long;
 //   * double -> int64 uses the x86 rule (out of range or NaN gives INT64_MIN).
 
-#pragma OPENCL EXTENSION cl_khr_fp64 : enable
-#pragma OPENCL FP_CONTRACT OFF
-
-typedef long i64;
-typedef ulong u64;
+// Backend specifics (address spaces, types, atomics, ...) come from nf_port_opencl.h or
+// nf_port_cuda.h, which must be included first.
 
 #define ND 18
 #define NI 35
@@ -29,20 +26,20 @@ typedef ulong u64;
 
 // ---- helpers -------------------------------------------------------------
 
-inline i64 d2l(double x)
+NF_INLINE i64 d2l(double x)
 {
-  if (!(x > -9223372036854775808.0 && x < 9223372036854775808.0)) return LONG_MIN;
+  if (!(x > -9223372036854775808.0 && x < 9223372036854775808.0)) return NF_I64_MIN;
   return (i64)x;
 }
 
-inline float reds(float x, float q, float qi)
+NF_INLINE float reds(float x, float q, float qi)
 {
   return x - q * ((x * qi + MAGICS) - MAGICS);
 }
 
 // x mod q as a float in [-(q-1)/2, (q-1)/2].  Limbs of 16 bits, weights
 // c1 = 2^16, c2 = 2^32, c3 = 2^48 mod q (all < 1024): the sum stays below 2^28.
-inline float coef_mod(i64 x, int q, int c1, int c2, int c3, int w64)
+NF_INLINE float coef_mod(i64 x, int q, int c1, int c2, int c3, int w64)
 {
   u64 u = (u64)x;
   int r = (int)(u & 0xFFFF) + (int)((u >> 16) & 0xFFFF) * c1
@@ -55,7 +52,7 @@ inline float coef_mod(i64 x, int q, int c1, int c2, int c3, int w64)
 }
 
 // chi(Disc A) = -1 mod q proven?  Same algorithm as chain_general.inc for one lane.
-inline int chi_reject(const float *a, float q, float qi, int e)
+NF_INLINE int chi_reject(const float *a, float q, float qi, int e)
 {
   float u[12], v[12], w[12];
   #pragma unroll
@@ -107,12 +104,12 @@ inline int chi_reject(const float *a, float q, float qi, int e)
 }
 
 // bb[1..10] as c[1..10] (leading coefficient 1 implied).  1 = survives all primes.
-inline int survives(const i64 *c, __constant int *qt, uint np)
+NF_INLINE int survives(const i64 *c, NF_C int *qt, nfuint np)
 {
-  for (uint p = 0; p < np; p++) {
+  for (nfuint p = 0; p < np; p++) {
     int q = qt[p * 8 + 0], c1 = qt[p * 8 + 1], c2 = qt[p * 8 + 2], c3 = qt[p * 8 + 3];
     int w64 = qt[p * 8 + 4], e = qt[p * 8 + 5];
-    float qf = (float)q, qi = as_float(qt[p * 8 + 6]);
+    float qf = (float)q, qi = NF_AS_FLOAT(qt[p * 8 + 6]);
     float a[11];
     #pragma unroll
     for (int k = 0; k <= 9; k++) a[k] = coef_mod(c[10 - k], q, c1, c2, c3, w64);
@@ -124,24 +121,24 @@ inline int survives(const i64 *c, __constant int *qt, uint np)
 
 // ---- kernel ---------------------------------------------------------------
 
-__kernel void nf_enum(__global const double *nd, __global const i64 *ni,
-                      __global const u64 *cum, uint nnodes, uint nodebase, u64 total,
-                      __constant int *qt, uint nprime,
-                      __global i64 *out, __global uint *outcnt, uint outcap,
-                      __global uint *cnt)
+NF_KERNEL void nf_enum(NF_G const double *nd, NF_G const i64 *ni,
+                      NF_G const u64 *cum, nfuint nnodes, nfuint nodebase, u64 total,
+                      NF_C int *qt, nfuint nprime,
+                      NF_G i64 *out, NF_G nfuint *outcnt, nfuint outcap,
+                      NF_G nfuint *cnt)
 {
-  u64 gid = (u64)get_global_id(0);
+  u64 gid = NF_GID();
   if (gid >= total) return;
 
   // Node = last k with cum[k] <= gid.
-  uint lo = 0, hi = nnodes;
+  nfuint lo = 0, hi = nnodes;
   while (hi - lo > 1) {
-    uint mid = (lo + hi) >> 1;
+    nfuint mid = (lo + hi) >> 1;
     if (cum[mid] <= gid) lo = mid; else hi = mid;
   }
-  uint node = lo;
-  __global const double *D = nd + (size_t)(nodebase + node) * ND;
-  __global const i64 *I = ni + (size_t)(nodebase + node) * NI;
+  nfuint node = lo;
+  NF_G const double *D = nd + (size_t)(nodebase + node) * ND;
+  NF_G const i64 *I = ni + (size_t)(nodebase + node) * NI;
 
   i64 m2 = I[0] + (i64)(gid - cum[node]);
 
@@ -171,7 +168,7 @@ __kernel void nf_enum(__global const double *nd, __global const i64 *ni,
   const u64 base41 = M12 * (u64)m2 + cv41;
   const u64 base42 = M22 * (u64)m2 + cv42;
 
-  uint count = 0;
+  nfuint count = 0;
 
   for (i64 m1 = m1_L; m1 <= m1_U; ++m1) {
     u64 a41 = M11 * (u64)m1 + base41;
@@ -228,9 +225,9 @@ __kernel void nf_enum(__global const double *nd, __global const i64 *ni,
     c[6] = (i64)bb6; c[7] = (i64)bb7; c[8] = (i64)bb8; c[9] = (i64)bb9; c[10] = bb10;
     if (!survives(c, qt, nprime)) continue;
 
-    uint idx = atomic_inc(outcnt);
+    nfuint idx = NF_ATOMIC_INC(outcnt);
     if (idx < outcap) {
-      __global i64 *o = out + (size_t)idx * REC;
+      NF_G i64 *o = out + (size_t)idx * REC;
       o[0] = (i64)(nodebase + node);  o[1] = m2;  o[2] = m1;
       o[3] = c[1]; o[4] = c[2]; o[5] = c[3]; o[6] = c[4]; o[7] = c[5];
       o[8] = c[6]; o[9] = c[7]; o[10] = c[8]; o[11] = c[9];
