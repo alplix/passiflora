@@ -64,6 +64,14 @@ OpenCL GPU build: embed the kernel (`nf_enum_cl.h` is `R"NFCL(` + `nf_port_openc
 static). To keep the binary usable on older distributions build in an Ubuntu 22.04 environment
 (glibc 2.34).
 
+## 3b. Other systems
+
+* **Linux aarch64:** `build/build-linux-aarch64.sh`, run natively on an Ubuntu 22.04 arm64 machine or VM.
+* **macOS arm64:** `build/build-macos-arm64.sh` (Xcode tools, Homebrew gcc + gmp, BOINC's libraries, PARI built in place).
+* **MUSA:** `build/build-musa.sh` inside the `mthreads/musa` container (Ubuntu 22.04); produces the program,
+  `libnf_musa.so` and the vendor runtime.
+* The package builder is `build/make-release.py`; tests: `build/test-suite-unix.sh` (any Unix).
+
 ## 4. Windows
 
 Cross-compile with MinGW-w64. PARI's `Configure` must be run on a path the Windows side can

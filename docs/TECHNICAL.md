@@ -85,12 +85,28 @@ back end maps the few differences (address spaces, atomics, `as_float`, 64-bit t
 | Back end | Port header | Host code | Notes |
 |---|---|---|---|
 | OpenCL | `nf_port_opencl.h` | `nf_gpu_opencl.cpp` | kernel compiled at run time, `FP_CONTRACT OFF` |
+| MUSA (Moore Threads) | `nf_port_cuda.h` | `nf_gpu_musa.cpp` + `nf_musa_dev.cu` | the device part (kernel + CUDA-runtime-style wrapper) is converted with `musify-text` and built with `mcc` into `libnf_musa.so`; the program `dlopen`s it, so a computer without the vendor runtime or card just runs on the CPU. BOINC cannot see these GPUs: the task is a CPU task that uses the card by itself |
 | CUDA | `nf_port_cuda.h` | `nf_gpu_cuda.cpp` | kernel compiled once with `nvcc --fmad=false` into a fat binary (cubin for sm_50 … sm_120 + PTX) that is embedded in the program and loaded through the CUDA *driver* API, which is itself loaded at run time (`nvcuda.dll` / `libcuda.so.1`): nothing CUDA is linked, so the program starts without a CUDA driver and falls back to the CPU |
 
 The queueing, batch sizing, filter-prime table and the sorting of the survivors are shared (`nf_gpu_common.cpp`);
 a back end implements the five functions of `nf_gpu_backend.h`. `nf_gpu_cuda.cpp` also builds against other
 CUDA-driver-API-compatible runtimes (`-DNF_DRV_PREFIX`, `-DNF_DRV_LIB`; HIP, MUSA) given the code object of that
 toolchain.
+
+## GPU self-check
+
+At the start of every GPU task the CPU loops run next to the GPU for the first 5 million polynomials and the
+two counts are compared batch by batch; a mismatch stops the task with an error (`GPU self-check FAILED`)
+instead of sending results from a GPU or driver that miscomputes. `NF_SELFCHECK=<n>` changes the number of
+polynomials (0 = off), `NF_GPUCHECK=1` checks the whole run, `NF_SELFCHECK_FAULT=1` injects a miscount to test
+the failure path.
+
+## Other platforms
+
+* **aarch64 Linux / macOS arm64:** same sources. Compiled with `-ffp-contract=off`: the enumeration must round
+  exactly like the x86 build. Where `long double` is only a double (Apple silicon) the m1-range narrowing is
+  disabled, because its error margin assumes an extended-precision `long double` (x86: 64-bit mantissa, aarch64
+  Linux: 113 bits).
 
 ## Validation
 

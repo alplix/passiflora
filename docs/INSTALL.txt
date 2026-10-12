@@ -1,20 +1,22 @@
 Passiflora - GetDecics (NumberFields@home) optimized app, CPU and GPU
 =======================================================================
-Results are identical to the stock app (checked on all 31 test work units); the CPU
-version is 10-25x faster on one core, the GPU version finishes a work unit in seconds.
+Results are identical to the stock app (checked on the 31 test work units of the upstream test set);
+the CPU version is 10-25x faster on one core, the GPU versions finish a work unit in seconds.
 
 WHICH FILE DO I DOWNLOAD?
 -------------------------
-  CPU_...        the CPU app only. No graphics card needed.
-  GPU_...        the GPU app only (OpenCL: NVIDIA, AMD, Intel), with an app_config.xml.
-  GPU-CUDA_...   the GPU app for NVIDIA cards through CUDA (needs only the NVIDIA driver).
-  CPU-GPU-CUDA_  the CPU app and the CUDA app in one package.
-  CPU-GPU_...    BOTH in one package: the CPU app and the GPU app, with an app_info.xml that
-                 lists both and an app_config.xml for the GPU. BOINC runs the GPU app on a card
-                 and the CPU app on the processor.
+  CPU_...          the CPU app only. No graphics card needed.
+  GPU_...          the GPU app only (OpenCL: NVIDIA, AMD, Intel), with an app_config.xml.
+  CPU-GPU_...      BOTH in one package: the CPU app and the OpenCL app, with an app_info.xml that
+                   lists both and an app_config.xml for the GPU.
+  GPU-CUDA_...     the GPU app for NVIDIA cards through CUDA (needs only the NVIDIA driver).
+  CPU-GPU-CUDA_    the CPU app and the CUDA app in one package.
+  GPU-MUSA_...     for Moore Threads graphics cards (Linux x86-64): a CPU task that uses the card.
 
   ..._windows_x86-64.zip       Windows 64-bit
-  ..._linux_x86-64.tar.gz      Linux 64-bit (all GPU packages: glibc 2.34+, i.e. Ubuntu 22.04 or newer)
+  ..._linux_x86-64.tar.gz      Linux 64-bit (GPU packages: glibc 2.34+, i.e. Ubuntu 22.04 or newer)
+  ..._linux_aarch64.tar.gz     Linux 64-bit ARM (Raspberry Pi 4/5, Ampere, Graviton, ...; glibc 2.34+ for GPU)
+  ..._macos_arm64.tar.gz       macOS on Apple silicon (M1 and newer), CPU only (Apple GPUs have no double precision)
 
 Verify the download with SHA256SUMS.
 
@@ -24,29 +26,47 @@ INSTALL - WINDOWS
    (or abort them): tasks of the stock app cannot continue once app_info.xml is in place.
 2. BOINC Manager: File -> Exit BOINC (tick "Stop running tasks").
 3. Unzip the package and copy everything inside the folder (the .exe file(s), app_info.xml and,
-   in the CPU-GPU package, app_config.xml)
+   in the GPU packages, app_config.xml)
    into   C:\ProgramData\BOINC\projects\numberfields.asu.edu_NumberFields\
    (ProgramData is a hidden folder: type it into the address bar.)
 4. Start BOINC Manager and choose "Allow new tasks".
 5. The version of a new task shows as 4.00 (CPU) or 4.02 (GPU); the stderr of a GPU task has a line
-   "GPU mode: OpenCL device ..." naming the card.
+   "GPU mode: ... device ..." naming the card.
 
-INSTALL - LINUX
----------------
+INSTALL - LINUX (x86-64 and aarch64)
+------------------------------------
 1. boinccmd --project https://numberfields.asu.edu/NumberFields/ nomorework   (let tasks finish)
 2. sudo systemctl stop boinc-client
 3. tar xzf the package, then copy its files into the project folder
    (Debian/Ubuntu: /var/lib/boinc-client/projects/numberfields.asu.edu_NumberFields/):
-     sudo cp run_passiflora_linux_x86-64*/GetDecics_passiflora* run_passiflora_linux_x86-64*/*.xml <folder>/
-     sudo chown boinc:boinc <folder>/GetDecics_passiflora* <folder>/*.xml
-     sudo chmod +x <folder>/GetDecics_passiflora*
+     sudo cp run_passiflora_linux_*/* <folder>/
+     sudo chown boinc:boinc <folder>/*
+     sudo chmod +x <folder>/GetDecics_passiflora* <folder>/libnf_musa.so   (the .so only in the MUSA package)
 4. sudo systemctl start boinc-client ; boinccmd --project https://numberfields.asu.edu/NumberFields/ allowmorework
+
+INSTALL - macOS (Apple silicon)
+-------------------------------
+1. BOINC Manager: Projects -> NumberFields@home -> "No new tasks". Let the tasks you have finish.
+2. Quit BOINC (BOINC Manager -> Quit, and stop the client).
+3. tar xzf the package and copy its files into
+   /Library/Application Support/BOINC Data/projects/numberfields.asu.edu_NumberFields/
+     sudo chown boinc_master:boinc_master <the copied files>
+     sudo chmod +x <the copied program file>
+     sudo xattr -dr com.apple.quarantine <the copied files>      (clears the mark of a downloaded file)
+4. Start BOINC and choose "Allow new tasks".
 
 GPU
 ---
-* One program serves NVIDIA, AMD and Intel (OpenCL); BOINC chooses the card. The card needs
+* OpenCL: one program serves NVIDIA, AMD and Intel; BOINC chooses the card. The card needs
   double-precision OpenCL support and a driver that provides OpenCL (Windows: OpenCL.dll comes with
   the driver; Linux: libOpenCL.so.1 plus the vendor's OpenCL runtime).
+* CUDA: NVIDIA cards only; no CUDA toolkit needed, the program loads the driver by itself.
+* MUSA: Moore Threads cards cannot be seen by BOINC, so the program runs as a normal CPU task and uses
+  the card itself; libnf_musa.so and libmusart.so.4 must stay next to it. On a computer without such a
+  card it simply runs on the CPU.
+* Every GPU task first cross-checks the start of its work (5 million polynomials) against the CPU. If a
+  GPU or driver does not reproduce the CPU result, the task stops with an error instead of reporting
+  wrong results (the stderr then says "GPU self-check FAILED"). NF_SELFCHECK=0 switches it off.
 * app_config.xml runs 4 tasks per card (gpu_usage 0.25): while one task is busy on the processor
   (the exact checks of the few candidates), the others keep the card working. Change
   <gpu_usage> to 1 for one task per card, 0.5 for two, 0.125 for eight; each task uses about
@@ -55,8 +75,8 @@ GPU
 
 UNINSTALL
 ---------
-Stop BOINC, delete app_info.xml, app_config.xml and the GetDecics_passiflora* file(s) from the project
-folder, start BOINC.
+Stop BOINC, delete app_info.xml, app_config.xml and the GetDecics_passiflora* file(s) (and libnf_musa.so,
+libmusart.so.4 for MUSA) from the project folder, start BOINC.
 
 Source and details: https://github.com/alplix/passiflora   (licence GPL-2.0-or-later)
 Original application: Eric Driver, https://github.com/drivere/get-decics-numberfields

@@ -24,7 +24,7 @@ applied on top of the upstream source, see [BUILDING](docs/BUILDING.md).
 
 **➡️ [Grab the latest release here](https://github.com/alplix/passiflora/releases/latest) ⬅️**
 
-The number after the prefix is the version (`020` = v0.2.0).
+The number after the prefix is the version (`030` = v0.3.0).
 
 | starts with | what it is | who it is for |
 |---|---|---|
@@ -48,7 +48,14 @@ The number after the prefix is the version (`020` = v0.2.0).
 | 🪟 `GPU-CUDA_…_windows_x86-64.zip` / `CPU-GPU-CUDA_…` | Windows 64-bit + NVIDIA driver | CUDA `.exe` (all GPUs from Maxwell to Blackwell) |
 | 🐧 `GPU-CUDA_…_linux_x86-64.tar.gz` / `CPU-GPU-CUDA_…` | Linux 64-bit, glibc 2.34+ + NVIDIA driver | same |
 
-macOS and ARM builds are not available yet.
+**More systems:**
+
+| Package | System | Notes |
+|---|---|---|
+| 🐧 `CPU_…_linux_aarch64.tar.gz` | Linux 64-bit ARM | fully static; Raspberry Pi 4/5, Ampere, Graviton, ... |
+| 🐧 `GPU_…_linux_aarch64.tar.gz` / `CPU-GPU_…` | Linux 64-bit ARM + OpenCL driver | glibc 2.34+ |
+| 🍎 `CPU_…_macos_arm64.tar.gz` | macOS on Apple silicon (M1 and newer) | CPU only: Apple GPUs have no double precision |
+| 🐧 `GPU-MUSA_…_linux_x86-64.tar.gz` | Linux 64-bit + Moore Threads driver | MUSA: a CPU task that uses the card itself |
 
 Install steps are in `INSTALL.txt` (attached to every release) and inside each package.
 
@@ -85,6 +92,8 @@ Yes — byte for byte, apart from the "Elapsed Time" line:
   polynomials that are provably not solutions, and everything that is not rejected
   goes through the original test unchanged. See [TECHNICAL](docs/TECHNICAL.md).
 * Checkpoint/restart was tested by killing runs mid-way (CPU and GPU).
+* Every GPU task cross-checks its first 5 million polynomials against the CPU and stops with an error instead of
+  reporting wrong results if a GPU or driver disagrees.
 
 ---
 
