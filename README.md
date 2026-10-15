@@ -54,6 +54,7 @@ The number after the prefix is the version (`030` = v0.3.0).
 |---|---|---|
 | 🐧 `CPU_…_linux_aarch64.tar.gz` | Linux 64-bit ARM | fully static; Raspberry Pi 4/5, Ampere, Graviton, ... |
 | 🐧 `GPU_…_linux_aarch64.tar.gz` / `CPU-GPU_…` | Linux 64-bit ARM + OpenCL driver | glibc 2.34+ |
+| 🤖 `CPU_…_android_aarch64.tar.gz` | Android 64-bit ARM (Android 10 and newer) | for a BOINC client that can read an app_info.xml: rooted devices, or BOINC inside Termux |
 | 🐧 `CPU_…_linux_riscv64.tar.gz` | Linux RISC-V 64-bit | fully static |
 | 🐧 `CPU_…_linux_armhf.tar.gz` | Linux 32-bit ARM (armhf; Raspberry Pi OS 32-bit) | fully static |
 | 🐧 `CPU_…_linux_ppc64le.tar.gz` | Linux PowerPC 64-bit (little endian) | fully static |

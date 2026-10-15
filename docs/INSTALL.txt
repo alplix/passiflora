@@ -17,6 +17,8 @@ WHICH FILE DO I DOWNLOAD?
   ..._linux_x86-64.tar.gz      Linux 64-bit (GPU packages: glibc 2.34+, i.e. Ubuntu 22.04 or newer)
   ..._linux_aarch64.tar.gz     Linux 64-bit ARM (Raspberry Pi 4/5, Ampere, Graviton, ...; glibc 2.34+ for GPU)
   ..._macos_arm64.tar.gz       macOS on Apple silicon (M1 and newer), CPU only (Apple GPUs have no double precision)
+  ..._android_aarch64.tar.gz   Android 64-bit ARM (Android 10 and newer), CPU only; needs a BOINC client that can read app_info.xml
+                               (rooted device, or the BOINC client of Termux)
   ..._linux_riscv64.tar.gz     Linux RISC-V 64-bit, CPU only
   ..._linux_armhf.tar.gz       Linux 32-bit ARM (armhf), CPU only
   ..._linux_ppc64le.tar.gz     Linux PowerPC 64-bit little endian (POWER8 and newer), CPU only

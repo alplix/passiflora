@@ -8,8 +8,8 @@
 #   GPU-CUDA_        the CUDA GPU app only (NVIDIA)
 #   CPU-GPU-CUDA_    CPU + CUDA in one package
 #   GPU-MUSA_        the Moore Threads (MUSA) app, which also runs on the CPU
-# Systems: windows_x86-64, linux_x86-64, linux_aarch64, macos_arm64, linux_riscv64, linux_ppc64le, linux_s390x, linux_armhf.
-# Set PASSIFLORA_<WIN|LIN|A64|MAC|RV64|PPC64|S390X|ARM32>_<CPU|GPU|CUDA|MUSA> to the executables (a package is skipped if one is missing);
+# Systems: windows_x86-64, linux_x86-64, linux_aarch64, macos_arm64, android_aarch64, linux_riscv64, linux_ppc64le, linux_s390x, linux_armhf.
+# Set PASSIFLORA_<WIN|LIN|A64|MAC|ANDROID|RV64|PPC64|S390X|ARM32>_<CPU|GPU|CUDA|MUSA> to the executables (a package is skipped if one is missing);
 # PASSIFLORA_LIN_MUSA is a directory holding GetDecics_musa, libnf_musa.so and libmusart.so.4.
 
 import hashlib, io, os, sys, tarfile, time, zipfile
@@ -55,6 +55,9 @@ SYSTEMS = (
     dict(key="ARM32", osname="linux_armhf", platforms=["arm-unknown-linux-gnueabihf"], system="Linux ARM 32-bit (armhf)",
          windows=False, exe="GetDecics_passiflora_%s%s_arm-unknown-linux-gnueabihf", kinds=["CPU"],
          datadir="/var/lib/boinc-client/projects/numberfields.asu.edu_NumberFields"),
+    dict(key="ANDROID", osname="android_aarch64", platforms=["aarch64-android-linux-gnu"], system="Android 64-bit ARM", windows=False,
+         exe="GetDecics_passiflora_%s%s_aarch64-android-linux-gnu", kinds=["CPU"], android=True,
+         datadir="/data/data/edu.berkeley.boinc/client/projects/numberfields.asu.edu_NumberFields"),
     dict(key="MAC", osname="macos_arm64", platforms=["arm64-apple-darwin", "x86_64-apple-darwin"], system="macOS Apple silicon",
          windows=False, exe="GetDecics_passiflora_%s%s_arm64-apple-darwin", kinds=["CPU"],
          datadir="/Library/Application Support/BOINC Data/projects/numberfields.asu.edu_NumberFields", mac=True),
@@ -124,7 +127,9 @@ def readme(sysd, name, gpu, cuda, musa, extra):
     files = "program file(s), app_info.xml" + (", app_config.xml" if gpu else "")
     if musa:
         files = "all files in this folder"
-    if mac:
+    if sysd.get("android"):
+        stop = ["2. Stop the BOINC client (BOINC app: menu -> Shut down BOINC, or stop it from a root shell)."]
+    elif mac:
         stop = ["2. Quit BOINC (BOINC Manager -> BOINC Manager -> Quit, and stop the client)."]
     elif sysd["windows"]:
         stop = ["2. Exit BOINC (BOINC Manager -> File -> Exit, 'stop running tasks')."]
@@ -141,7 +146,10 @@ def readme(sysd, name, gpu, cuda, musa, extra):
     ] + stop + [
         "3. Copy everything in this folder (%s) into:" % files, "   " + sysd["datadir"],
     ]
-    if not sysd["windows"]:
+    if sysd.get("android"):
+        lines += ["   Android only lets the BOINC client read this folder with root access (or when BOINC runs in Termux, with",
+                  "   that client's own projects folder).  Make the program file executable:  chmod 755 <the program file>"]
+    elif not sysd["windows"]:
         lines += ["   then:  sudo chown -R boinc:boinc <the copied files>  &&  sudo chmod +x <the program files>"
                   if not mac else
                   "   then:  sudo chown -R boinc_master:boinc_master <the copied files>  &&  sudo chmod +x <the program files>",
