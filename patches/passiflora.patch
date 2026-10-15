@@ -1,16 +1,18 @@
 diff -U0 -r a/GetDecicsSrc/GetDecics.cpp b/GetDecicsSrc/GetDecics.cpp
---- a/GetDecicsSrc/GetDecics.cpp	2026-10-12 14:17:57.746523205 +0300
-+++ b/GetDecicsSrc/GetDecics.cpp	2026-10-12 14:17:57.750837517 +0300
+--- a/GetDecicsSrc/GetDecics.cpp	2026-10-15 02:53:56.673642400 +0300
++++ b/GetDecicsSrc/GetDecics.cpp	2026-10-15 02:53:56.705150700 +0300
 @@ -102,0 +103,3 @@
 +extern int nfArgc;
 +extern char **nfArgv;
 +
-@@ -135,0 +139,2 @@
+@@ -125,0 +129 @@
++  fprintf(stderr, "Passiflora - Coded By Alperen Yavuz - https://github.com/alplix/passiflora\n");  fflush(stderr);
+@@ -135,0 +140,2 @@
 +
 +  nfArgc = argc;  nfArgv = argv;
 diff -U0 -r a/GetDecicsSrc/TgtMartinet.cpp b/GetDecicsSrc/TgtMartinet.cpp
---- a/GetDecicsSrc/TgtMartinet.cpp	2026-10-12 14:17:57.723073783 +0300
-+++ b/GetDecicsSrc/TgtMartinet.cpp	2026-10-12 14:17:57.737816014 +0300
+--- a/GetDecicsSrc/TgtMartinet.cpp	2026-10-15 02:53:57.710362600 +0300
++++ b/GetDecicsSrc/TgtMartinet.cpp	2026-10-15 02:53:57.739393600 +0300
 @@ -20,0 +21,4 @@
 +#include "nf_gpu.h"
 +#include <vector>
@@ -418,8 +420,8 @@ diff -U0 -r a/GetDecicsSrc/TgtMartinet.cpp b/GetDecicsSrc/TgtMartinet.cpp
 +    free(exact);
 +    }
 diff -U0 -r a/GetDecicsSrc/TgtMartinet.h b/GetDecicsSrc/TgtMartinet.h
---- a/GetDecicsSrc/TgtMartinet.h	2026-10-12 14:17:57.740299864 +0300
-+++ b/GetDecicsSrc/TgtMartinet.h	2026-10-12 14:17:57.744669418 +0300
+--- a/GetDecicsSrc/TgtMartinet.h	2026-10-15 02:53:58.145419600 +0300
++++ b/GetDecicsSrc/TgtMartinet.h	2026-10-15 02:53:58.174426100 +0300
 @@ -23,0 +24,12 @@
 +// pdfilter.f90 is built once per instruction-set level on x86-64 (AVX2+FMA and
 +// baseline SSE2) and picked at run time; elsewhere there is a single build.
@@ -434,8 +436,8 @@ diff -U0 -r a/GetDecicsSrc/TgtMartinet.h b/GetDecicsSrc/TgtMartinet.h
 +extern "C" void pdf_filter(const long long*, int, signed char*);
 +#endif
 diff -U0 -r a/GetDecicsSrc/polDiscTest_cpu.cpp b/GetDecicsSrc/polDiscTest_cpu.cpp
---- a/GetDecicsSrc/polDiscTest_cpu.cpp	2026-10-12 14:17:57.746523205 +0300
-+++ b/GetDecicsSrc/polDiscTest_cpu.cpp	2026-10-12 14:17:57.750837517 +0300
+--- a/GetDecicsSrc/polDiscTest_cpu.cpp	2026-10-15 02:53:58.618456800 +0300
++++ b/GetDecicsSrc/polDiscTest_cpu.cpp	2026-10-15 02:53:58.658976600 +0300
 @@ -8,0 +9,6 @@
 +#include <limits.h>
 +
