@@ -1,34 +1,32 @@
 # Passiflora theme for NumberFields@home
 
-A modern light and dark theme for the NumberFields@home web site, in the colours of the passion flower.
-It restyles the whole site (home, tables, forums, forms, account pages) and works on phones.
-
-What the userscript adds on top of the style:
-
-- an animated hero with live numbers read from the server status page (users, computers, TeraFLOPS, tasks);
-- system requirements that match today's hardware (the CPU app peaks near 11 MB of memory per task; the old text said 128 MB, 32 MB of disk and "Intel/AMD only");
-- tiles for the link lists, gold/silver/bronze rows in the league tables, and a light/dark/auto switch in the menu.
+A calm light and dark restyle of the NumberFields@home web site. The BOINC pages, menus, tables and forums stay exactly
+as BOINC builds them; only colours, type and spacing change. It follows the light/dark setting of your system and works
+on phones.
 
 Coded By Alperen Yavuz · <https://github.com/alplix/passiflora>
 
-![Home page, dark](screenshots/hero-dark.jpg)
-![Home page, light](screenshots/hero-light.jpg)
+![Home page](screenshots/home-dark.jpg)
 ![System requirements](screenshots/requirements.jpg)
-![Top participants](screenshots/top-users.jpg)
+
+## What changes
+
+- colours, type, panels, tables, forms and buttons, in light and dark;
+- the home page's system requirements, which described hardware from 2010 (128 MB of RAM, 32 MB of disk,
+  "Intel/Amd processor", "Windows, Linux or Mac (x86)"): the same list in the same place, now with current values.
+
+Nothing is added to the pages.
 
 ## For visitors (no change on the server)
 
-**Userscript** (style + theme switch in the menu + a Passiflora download card on the home page).
-Install a userscript manager (Tampermonkey, Violentmonkey, Greasemonkey), then open:
+**Userscript** (Tampermonkey, Violentmonkey, Greasemonkey): the style and the corrected requirements list. Install a
+userscript manager, then open:
 
 <https://raw.githubusercontent.com/alplix/passiflora/main/theme/numberfields-passiflora.user.js>
 
 **Stylus** (style only). Install the Stylus browser extension, then open:
 
 <https://raw.githubusercontent.com/alplix/passiflora/main/theme/numberfields-passiflora.user.css>
-
-The theme follows the light/dark setting of your system. With the userscript, the menu entry at the top right switches
-between *Auto*, *Light* and *Dark*; the Passiflora card on the home page can be hidden with *Hide*.
 
 ## For the project administrators
 
@@ -39,13 +37,14 @@ between *Auto*, *Light* and *Dark*; the Passiflora card on the home page can be 
 2. Copy `theme/white.css` from this folder over it.
 
 To go back, restore the copy. The theme only uses the classes the BOINC web pages and Bootstrap 3 already produce.
+The requirements list is page content: the five lines are in `enhance.js` if you want to put them into the home page.
 
 ## Files
 
 | File | Purpose |
 |---|---|
 | `theme.css` | the stylesheet (source) |
-| `enhance.js` | theme switch and the home page card (source) |
+| `enhance.js` | the corrected requirements list (source) |
 | `build.py` | builds the three files below from the two sources |
 | `numberfields-passiflora.user.js` | userscript |
 | `numberfields-passiflora.user.css` | Stylus user style |

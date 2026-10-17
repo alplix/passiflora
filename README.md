@@ -118,4 +118,4 @@ repository plus the upstream repository and PARI 2.8 named there.
 
 ## Theme for the NumberFields@home web site
 
-A light and dark theme for the project site, as a userscript, a Stylus style, or a drop-in `white.css` for the administrators: see [theme/](theme/).
+A calm light and dark restyle of the project site that keeps the BOINC layout, as a userscript, a Stylus style, or a drop-in `white.css` for the administrators: see [theme/](theme/).
