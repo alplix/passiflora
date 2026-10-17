@@ -1,25 +1,28 @@
-# Passiflora theme for NumberFields@home
+# Chalk and Paper - a theme for NumberFields@home
 
-A calm light and dark restyle of the NumberFields@home web site. The BOINC pages, menus, tables and forums stay exactly
-as BOINC builds them; only colours, type and spacing change. It follows the light/dark setting of your system and works
-on phones.
+A scholarly light and dark theme for the NumberFields@home web site: serif headings, deep teal with copper accents,
+warm paper in the light mode and ink blue in the dark mode. The BOINC pages, tables and forums keep their structure.
+It follows the light/dark setting of your system and works on phones.
 
 Coded By Alperen Yavuz · <https://github.com/alplix/passiflora>
 
-![Home page](screenshots/home-dark.jpg)
-![System requirements](screenshots/requirements.jpg)
+![Home page, dark](screenshots/home-dark.jpg)
+![Menu, light](screenshots/menu-light.jpg)
+![Top participants, light](screenshots/top-users-light.jpg)
 
 ## What changes
 
 - colours, type, panels, tables, forms and buttons, in light and dark;
+- a menu bar that groups the links the site already has (Project, Account, Statistics, Community); on the home page it
+  reads the link texts of the site itself, so they follow the visitor's language;
 - the home page's system requirements, which described hardware from 2010 (128 MB of RAM, 32 MB of disk,
   "Intel/Amd processor", "Windows, Linux or Mac (x86)"): the same list in the same place, now with current values.
 
-Nothing is added to the pages.
+No new content is added to the pages.
 
 ## For visitors (no change on the server)
 
-**Userscript** (Tampermonkey, Violentmonkey, Greasemonkey): the style and the corrected requirements list. Install a
+**Userscript** (Tampermonkey, Violentmonkey, Greasemonkey): the style, the grouped menu and the corrected requirements list. Install a
 userscript manager, then open:
 
 <https://raw.githubusercontent.com/alplix/passiflora/main/theme/numberfields-passiflora.user.js>
@@ -44,7 +47,7 @@ The requirements list is page content: the five lines are in `enhance.js` if you
 | File | Purpose |
 |---|---|
 | `theme.css` | the stylesheet (source) |
-| `enhance.js` | the corrected requirements list (source) |
+| `enhance.js` | the grouped menu and the corrected requirements list (source) |
 | `build.py` | builds the three files below from the two sources |
 | `numberfields-passiflora.user.js` | userscript |
 | `numberfields-passiflora.user.css` | Stylus user style |
