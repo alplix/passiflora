@@ -11,8 +11,13 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 VERSION = "1.0.0"
 RAW = "https://raw.githubusercontent.com/alplix/passiflora/main/theme/"
 
-css = open(os.path.join(HERE, "theme.css"), encoding="utf-8").read()
-js = open(os.path.join(HERE, "enhance.js"), encoding="utf-8").read()
+def read(name):
+    with open(os.path.join(HERE, name), encoding="utf-8") as f:
+        return f.read()
+
+
+css = read("theme.css") + chr(10) + read("legend.css")
+js = read("enhance.js")
 out = HERE
 os.makedirs(out, exist_ok=True)
 
