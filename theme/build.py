@@ -16,12 +16,7 @@ def read(name):
         return f.read()
 
 
-import base64
-raw_css = read("theme.css")
-with open(os.path.join(HERE, "nf-passiflora-banner.jpg"), "rb") as f:
-    banner_uri = "data:image/jpeg;base64," + base64.b64encode(f.read()).decode("ascii")
-css = raw_css.replace("__BANNER__", banner_uri)                       # userscript and Stylus: self-contained
-css_file = raw_css.replace("__BANNER__", "nf-passiflora-banner.jpg")  # white.css: the image sits next to it
+css = read("theme.css")
 js = read("enhance.js")
 out = HERE
 os.makedirs(out, exist_ok=True)
@@ -76,5 +71,5 @@ user_css = """/* ==UserStyle==
 
 write("numberfields-passiflora.user.js", user_js)
 write("numberfields-passiflora.user.css", user_css)
-write("white.css", css_file)
+write("white.css", css)
 print("built", os.listdir(out))

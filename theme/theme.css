@@ -1,54 +1,52 @@
 /*
- * NumberFields@home theme "Chalk & Paper" (BOINC web, Bootstrap 3).
- * Scholarly look: serif headings, deep teal and copper, warm paper in the light mode, ink blue in the dark mode.
+ * NumberFields@home theme "Meadow" (BOINC web, Bootstrap 3).
+ * Colours taken from the site's own banner: grass green, soil brown, sky gold and the blue-grey of its letters; serif headings.
  * The BOINC pages keep their structure; colours, type, panels, tables and the menu change.
  * Coded By Alperen Yavuz - https://github.com/alplix/passiflora
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
 
 :root {
-  --bg: #f5f2ea;
-  --card: #fffdf8;
-  --card-2: #efeadc;
-  --text: #1f2529;
-  --muted: #697176;
-  --border: #ddd5c2;
-  --bar: #0c4f4b;
-  --bar-text: #f1f7f6;
-  --accent: #0e6f6a;
-  --copper: #b4691f;
-  --link: #0b6678;
-  --link-hover: #b4691f;
-  --zebra: #faf7ef;
-  --hover: #f1ecdd;
-  --th-text: #0c4f4b;
+  --bg: #f3f0e4;
+  --card: #fffef9;
+  --card-2: #ece7d3;
+  --text: #26261f;
+  --muted: #6c6b5c;
+  --border: #d9d2b8;
+  --bar: #3a2c1c;
+  --bar-text: #f6f0de;
+  --accent: #2e6b3a;
+  --copper: #c28a1c;
+  --link: #25688a;
+  --link-hover: #a8721a;
+  --zebra: #f9f6ea;
+  --hover: #efe9d2;
+  --th-text: #2e6b3a;
   --input-bg: #ffffff;
-  --code-bg: #efeadc;
-  --shadow: 0 1px 2px rgba(60, 50, 20, .07);
-  --grid: rgba(90, 80, 40, .06);
+  --code-bg: #ece7d3;
+  --shadow: 0 1px 2px rgba(60, 50, 20, .08);
   --serif: Georgia, "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", serif;
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #0d151a;
-    --card: #131f26;
-    --card-2: #1a2a33;
-    --text: #e2e9ea;
-    --muted: #8da0a7;
-    --border: #25363f;
-    --bar: #0a2d33;
-    --bar-text: #e4f2f1;
-    --accent: #43c6b7;
-    --copper: #e2a35c;
-    --link: #74d6cb;
-    --link-hover: #e2a35c;
-    --zebra: #162630;
-    --hover: #1d313b;
-    --th-text: #8fded4;
-    --input-bg: #0f1a20;
-    --code-bg: #1a2a33;
-    --shadow: 0 1px 2px rgba(0, 0, 0, .45);
-    --grid: rgba(120, 190, 200, .05);
+    --bg: #10150e;
+    --card: #171e14;
+    --card-2: #212a1c;
+    --text: #e6eadb;
+    --muted: #98a38b;
+    --border: #2c3827;
+    --bar: #22190f;
+    --bar-text: #f1e9d2;
+    --accent: #82c77c;
+    --copper: #e3b341;
+    --link: #8fcbe8;
+    --link-hover: #e3b341;
+    --zebra: #1b2318;
+    --hover: #263222;
+    --th-text: #a6dc9f;
+    --input-bg: #11170f;
+    --code-bg: #212a1c;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .5);
   }
 }
 html { color-scheme: light dark; }
@@ -59,9 +57,7 @@ body {
   font-size: 14.5px;
   line-height: 1.6;
   color: var(--text);
-  background-color: var(--bg);
-  background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
-  background-size: 28px 28px;
+  background: var(--bg);
   margin: 0;
   padding: 0 0 30px;
 }
@@ -84,13 +80,12 @@ blockquote { border-left: 3px solid var(--copper); background: var(--card-2); co
 .navbar-default {
   background: var(--bar);
   border: 0;
-  border-bottom: 0;
+  border-bottom: 3px solid var(--copper);
   border-radius: 0 0 6px 6px;
   box-shadow: var(--shadow);
   margin-bottom: 16px;
   min-height: 52px;
 }
-.navbar-default::after { display: block; content: ""; clear: both; height: 3px; background: linear-gradient(90deg, #2ee6d0, #4a8cff, #966eff, #ffaa64); border-radius: 0 0 6px 6px; }
 .navbar-default .navbar-brand {
   font-family: var(--serif);
   font-size: 20px;
@@ -122,20 +117,10 @@ blockquote { border-left: 3px solid var(--copper); background: var(--card-2); co
 .dropdown-menu > li > a:hover { background: var(--hover); color: var(--accent); text-decoration: none; }
 .pf-caret { display: inline-block; margin-left: 6px; border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 5px solid currentColor; vertical-align: middle; opacity: .75; }
 
-/* the banner: the roots of all degree-10 polynomials with coefficients -1, 0, 1, drawn by make-banner.py */
-center > img.img-responsive[src*="banner"] {
-  object-fit: none;
-  object-position: -99999px 0;
-  background: url("__BANNER__") center / 100% 100% no-repeat;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  box-shadow: var(--shadow);
-}
-center > img.img-responsive { border-radius: 6px; }
+center > img.img-responsive { border: 1px solid var(--border); border-radius: 6px; box-shadow: var(--shadow); }
 
 /* ---- panels: ruled headings instead of filled bars ---- */
 .panel { background: var(--card); border: 1px solid var(--border); border-radius: 6px; box-shadow: var(--shadow); position: relative; overflow: hidden; }
-.panel-primary::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 3px; background: linear-gradient(90deg, #2ee6d0, #4a8cff, #966eff, #ffaa64); }
 .panel-heading { background: transparent; border: 0; padding: 14px 22px 0; }
 .panel-title, .panel-heading h1, .panel-heading h2, .panel-heading h3 {
   font-family: var(--serif);
