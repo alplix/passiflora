@@ -115,3 +115,7 @@ Passiflora's own code is **GPL-2.0-or-later**. The binaries link PARI/GP
 (GPL-2.0-or-later), GMP and BOINC's libraries; see [THIRD_PARTY.md](THIRD_PARTY.md) and
 [NOTICE.md](NOTICE.md). The source that corresponds to the binaries is this
 repository plus the upstream repository and PARI 2.8 named there.
+
+## Theme for the NumberFields@home web site
+
+A light and dark theme for the project site, as a userscript, a Stylus style, or a drop-in `white.css` for the administrators: see [theme/](theme/).
