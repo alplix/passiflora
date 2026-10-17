@@ -2,18 +2,18 @@
 # Coded By Alperen Yavuz - https://github.com/alplix/passiflora
 #
 # Builds the three ways of using the theme from theme.css and enhance.js:
-#   dist/numberfields-passiflora.user.js   userscript (Tampermonkey, Violentmonkey, Greasemonkey): style + page additions
-#   dist/numberfields-passiflora.user.css  Stylus user style (style only)
-#   dist/white.css                         drop-in for the project's web folder (style only, for the project's administrators)
+#   numberfields-passiflora.user.js   userscript (Tampermonkey, Violentmonkey, Greasemonkey): style + page additions
+#   numberfields-passiflora.user.css  Stylus user style (style only)
+#   white.css                         drop-in for the project's web folder (style only, for the project's administrators)
 import json, os
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 VERSION = "1.0.0"
-RAW = "https://raw.githubusercontent.com/alplix/passiflora/main/theme/dist/"
+RAW = "https://raw.githubusercontent.com/alplix/passiflora/main/theme/"
 
 css = open(os.path.join(HERE, "theme.css"), encoding="utf-8").read()
 js = open(os.path.join(HERE, "enhance.js"), encoding="utf-8").read()
-out = os.path.join(HERE, "dist")
+out = HERE
 os.makedirs(out, exist_ok=True)
 
 
