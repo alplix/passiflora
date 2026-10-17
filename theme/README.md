@@ -1,8 +1,8 @@
-# Chalk and Paper - a theme for NumberFields@home
+# Meadow - a theme for NumberFields@home
 
-A scholarly light and dark theme for the NumberFields@home web site: serif headings, deep teal with copper accents,
-warm paper in the light mode and ink blue in the dark mode. The BOINC pages, tables and forums keep their structure.
-It follows the light/dark setting of your system and works on phones.
+A light and dark theme for the NumberFields@home web site whose colours come from the site's own banner: grass green,
+soil brown, sky gold and the blue-grey of its letters, with serif headings. The BOINC pages, tables and forums keep their
+structure. It follows the light/dark setting of your system and works on phones.
 
 Coded By Alperen Yavuz · <https://github.com/alplix/passiflora>
 
@@ -12,10 +12,7 @@ Coded By Alperen Yavuz · <https://github.com/alplix/passiflora>
 
 ## What changes
 
-- the banner: the roots, in the complex plane, of every degree-10 polynomial with coefficients -1, 0 or 1 (the project
-  searches degree-10 fields). The dark holes are roots of unity; the colour is the argument of the root. It is drawn by
-  `make-banner.py`; in `white.css` the picture is `nf-passiflora-banner.jpg`, which must sit next to it;
-- colours, type, panels, tables, forms and buttons, in light and dark, with a thin graph-paper texture;
+- colours, type, panels, tables, forms and buttons, in light and dark;
 - a menu bar that groups the links the site already has (Project, Account, Statistics, Community); on the home page it
   reads the link texts of the site itself, so they follow the visitor's language;
 - the home page's system requirements, which described hardware from 2010 (128 MB of RAM, 32 MB of disk,
@@ -40,7 +37,7 @@ userscript manager, then open:
 `/NumberFields/white.css`). The site's pages already load it, so nothing else changes:
 
 1. Keep a copy of the current `white.css`.
-2. Copy `white.css` and `nf-passiflora-banner.jpg` from this folder into the same web folder (the first replaces the old file).
+2. Copy `theme/white.css` from this folder over it.
 
 To go back, restore the copy. The theme only uses the classes the BOINC web pages and Bootstrap 3 already produce.
 The requirements list is page content: the five lines are in `enhance.js` if you want to put them into the home page.
@@ -51,8 +48,6 @@ The requirements list is page content: the five lines are in `enhance.js` if you
 |---|---|
 | `theme.css` | the stylesheet (source) |
 | `enhance.js` | the grouped menu and the corrected requirements list (source) |
-| `make-banner.py` | draws the banner (`nf-passiflora-banner.jpg`) |
-| `nf-passiflora-banner.jpg` | the banner, for `white.css` |
 | `build.py` | builds the three files below from the sources |
 | `numberfields-passiflora.user.js` | userscript |
 | `numberfields-passiflora.user.css` | Stylus user style |
