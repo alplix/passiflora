@@ -2,7 +2,7 @@
 # Coded By Alperen Yavuz - https://github.com/alplix/passiflora
 #
 # Builds the three ways of using the theme from theme.css and enhance.js:
-#   numberfields-passiflora.user.js   userscript (Tampermonkey, Violentmonkey, Greasemonkey): the style plus the corrected system requirements
+#   numberfields-passiflora.user.js   userscript (Tampermonkey, Violentmonkey, Greasemonkey): the style, the grouped menu and the corrected system requirements
 #   numberfields-passiflora.user.css  Stylus user style (style only)
 #   white.css                         drop-in for the project's web folder (style only, for the project's administrators)
 import json, os
@@ -31,7 +31,7 @@ user_js = """// ==UserScript==
 // @name         Passiflora theme for NumberFields@home
 // @namespace    https://github.com/alplix/passiflora
 // @version      %(v)s
-// @description  A calm light/dark restyle of the NumberFields@home pages; the BOINC layout stays as it is.
+// @description  Chalk and Paper: a scholarly light/dark theme for NumberFields@home; the BOINC layout stays as it is.
 // @author       Alperen Yavuz
 // @license      GPL-2.0-or-later
 // @match        https://numberfields.asu.edu/NumberFields/*
@@ -58,7 +58,7 @@ user_css = """/* ==UserStyle==
 @name         Passiflora theme for NumberFields@home
 @namespace    https://github.com/alplix/passiflora
 @version      %(v)s
-@description  A calm light/dark restyle of the NumberFields@home pages; the BOINC layout stays as it is.
+@description  Chalk and Paper: a scholarly light/dark theme for NumberFields@home; the BOINC layout stays as it is.
 @author       Alperen Yavuz
 @license      GPL-2.0-or-later
 @homepageURL  https://github.com/alplix/passiflora/tree/main/theme
