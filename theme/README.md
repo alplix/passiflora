@@ -3,11 +3,18 @@
 A modern light and dark theme for the NumberFields@home web site, in the colours of the passion flower.
 It restyles the whole site (home, tables, forums, forms, account pages) and works on phones.
 
+What the userscript adds on top of the style:
+
+- an animated hero with live numbers read from the server status page (users, computers, TeraFLOPS, tasks);
+- system requirements that match today's hardware (the CPU app peaks near 11 MB of memory per task; the old text said 128 MB, 32 MB of disk and "Intel/AMD only");
+- tiles for the link lists, gold/silver/bronze rows in the league tables, and a light/dark/auto switch in the menu.
+
 Coded By Alperen Yavuz · <https://github.com/alplix/passiflora>
 
-![Home page, light](screenshots/home-light.jpg)
-![Top participants, dark](screenshots/top-users-dark.jpg)
-![Forum, dark](screenshots/forum-dark.jpg)
+![Home page, dark](screenshots/hero-dark.jpg)
+![Home page, light](screenshots/hero-light.jpg)
+![System requirements](screenshots/requirements.jpg)
+![Top participants](screenshots/top-users.jpg)
 
 ## For visitors (no change on the server)
 
