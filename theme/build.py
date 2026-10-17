@@ -31,7 +31,7 @@ user_js = """// ==UserScript==
 // @name         Passiflora theme for NumberFields@home
 // @namespace    https://github.com/alplix/passiflora
 // @version      %(v)s
-// @description  Chalk and Paper: a scholarly light/dark theme for NumberFields@home; the BOINC layout stays as it is.
+// @description  Prime: a modern, quiet light/dark theme for NumberFields@home; the BOINC layout stays as it is.
 // @author       Alperen Yavuz
 // @license      GPL-2.0-or-later
 // @match        https://numberfields.asu.edu/NumberFields/*
@@ -58,7 +58,7 @@ user_css = """/* ==UserStyle==
 @name         Passiflora theme for NumberFields@home
 @namespace    https://github.com/alplix/passiflora
 @version      %(v)s
-@description  Chalk and Paper: a scholarly light/dark theme for NumberFields@home; the BOINC layout stays as it is.
+@description  Prime: a modern, quiet light/dark theme for NumberFields@home; the BOINC layout stays as it is.
 @author       Alperen Yavuz
 @license      GPL-2.0-or-later
 @homepageURL  https://github.com/alplix/passiflora/tree/main/theme
