@@ -25,6 +25,7 @@
   --input-bg: #ffffff;
   --code-bg: #efeadc;
   --shadow: 0 1px 2px rgba(60, 50, 20, .07);
+  --grid: rgba(90, 80, 40, .06);
   --serif: Georgia, "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", serif;
 }
 @media (prefers-color-scheme: dark) {
@@ -47,6 +48,7 @@
     --input-bg: #0f1a20;
     --code-bg: #1a2a33;
     --shadow: 0 1px 2px rgba(0, 0, 0, .45);
+    --grid: rgba(120, 190, 200, .05);
   }
 }
 html { color-scheme: light dark; }
@@ -57,7 +59,9 @@ body {
   font-size: 14.5px;
   line-height: 1.6;
   color: var(--text);
-  background: var(--bg);
+  background-color: var(--bg);
+  background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 28px 28px;
   margin: 0;
   padding: 0 0 30px;
 }
@@ -80,12 +84,13 @@ blockquote { border-left: 3px solid var(--copper); background: var(--card-2); co
 .navbar-default {
   background: var(--bar);
   border: 0;
-  border-bottom: 3px solid var(--copper);
+  border-bottom: 0;
   border-radius: 0 0 6px 6px;
   box-shadow: var(--shadow);
   margin-bottom: 16px;
   min-height: 52px;
 }
+.navbar-default::after { display: block; content: ""; clear: both; height: 3px; background: linear-gradient(90deg, #2ee6d0, #4a8cff, #966eff, #ffaa64); border-radius: 0 0 6px 6px; }
 .navbar-default .navbar-brand {
   font-family: var(--serif);
   font-size: 20px;
@@ -117,10 +122,20 @@ blockquote { border-left: 3px solid var(--copper); background: var(--card-2); co
 .dropdown-menu > li > a:hover { background: var(--hover); color: var(--accent); text-decoration: none; }
 .pf-caret { display: inline-block; margin-left: 6px; border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 5px solid currentColor; vertical-align: middle; opacity: .75; }
 
-center > img.img-responsive { border: 1px solid var(--border); border-radius: 6px; box-shadow: var(--shadow); }
+/* the banner: the roots of all degree-10 polynomials with coefficients -1, 0, 1, drawn by make-banner.py */
+center > img.img-responsive[src*="banner"] {
+  object-fit: none;
+  object-position: -99999px 0;
+  background: url("nf-passiflora-banner.jpg") center / 100% 100% no-repeat;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: var(--shadow);
+}
+center > img.img-responsive { border-radius: 6px; }
 
 /* ---- panels: ruled headings instead of filled bars ---- */
-.panel { background: var(--card); border: 1px solid var(--border); border-radius: 6px; box-shadow: var(--shadow); }
+.panel { background: var(--card); border: 1px solid var(--border); border-radius: 6px; box-shadow: var(--shadow); position: relative; overflow: hidden; }
+.panel-primary::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 3px; background: linear-gradient(90deg, #2ee6d0, #4a8cff, #966eff, #ffaa64); }
 .panel-heading { background: transparent; border: 0; padding: 14px 22px 0; }
 .panel-title, .panel-heading h1, .panel-heading h2, .panel-heading h3 {
   font-family: var(--serif);
