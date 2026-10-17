@@ -2,7 +2,7 @@
 # Coded By Alperen Yavuz - https://github.com/alplix/passiflora
 #
 # Builds the three ways of using the theme from theme.css and enhance.js:
-#   numberfields-passiflora.user.js   userscript (Tampermonkey, Violentmonkey, Greasemonkey): style + page additions
+#   numberfields-passiflora.user.js   userscript (Tampermonkey, Violentmonkey, Greasemonkey): the style plus the corrected system requirements
 #   numberfields-passiflora.user.css  Stylus user style (style only)
 #   white.css                         drop-in for the project's web folder (style only, for the project's administrators)
 import json, os
@@ -16,7 +16,7 @@ def read(name):
         return f.read()
 
 
-css = read("theme.css") + chr(10) + read("legend.css")
+css = read("theme.css")
 js = read("enhance.js")
 out = HERE
 os.makedirs(out, exist_ok=True)
@@ -31,7 +31,7 @@ user_js = """// ==UserScript==
 // @name         Passiflora theme for NumberFields@home
 // @namespace    https://github.com/alplix/passiflora
 // @version      %(v)s
-// @description  A modern light/dark theme for NumberFields@home, a theme switch and a card for the Passiflora app.
+// @description  A calm light/dark restyle of the NumberFields@home pages; the BOINC layout stays as it is.
 // @author       Alperen Yavuz
 // @license      GPL-2.0-or-later
 // @match        https://numberfields.asu.edu/NumberFields/*
@@ -58,7 +58,7 @@ user_css = """/* ==UserStyle==
 @name         Passiflora theme for NumberFields@home
 @namespace    https://github.com/alplix/passiflora
 @version      %(v)s
-@description  A modern light/dark theme for NumberFields@home (style only; the userscript adds a theme switch and the Passiflora card).
+@description  A calm light/dark restyle of the NumberFields@home pages; the BOINC layout stays as it is.
 @author       Alperen Yavuz
 @license      GPL-2.0-or-later
 @homepageURL  https://github.com/alplix/passiflora/tree/main/theme
