@@ -589,12 +589,10 @@ body::after {
 /* tables: numbers, podium, hover */
 td { font-variant-numeric: tabular-nums; }
 .table-striped > tbody > tr, .table-hover > tbody > tr { transition: background .15s; }
-.pf-ranked > tbody > tr:nth-of-type(1) > td:first-child,
-.pf-ranked > tbody > tr:nth-of-type(2) > td:first-child,
-.pf-ranked > tbody > tr:nth-of-type(3) > td:first-child { font-weight: 850; font-size: 17px; }
-.pf-ranked > tbody > tr:nth-of-type(1) > td:first-child { color: #f59e0b; box-shadow: inset 4px 0 0 #f59e0b; }
-.pf-ranked > tbody > tr:nth-of-type(2) > td:first-child { color: #94a3b8; box-shadow: inset 4px 0 0 #94a3b8; }
-.pf-ranked > tbody > tr:nth-of-type(3) > td:first-child { color: #d97706; box-shadow: inset 4px 0 0 #b45309; }
+.pf-r1 > td:first-child, .pf-r2 > td:first-child, .pf-r3 > td:first-child { font-weight: 850; font-size: 17px; }
+.pf-r1 > td:first-child { color: #f59e0b; box-shadow: inset 4px 0 0 #f59e0b; }
+.pf-r2 > td:first-child { color: #94a3b8; box-shadow: inset 4px 0 0 #94a3b8; }
+.pf-r3 > td:first-child { color: #d97706; box-shadow: inset 4px 0 0 #b45309; }
 
 /* the Passiflora card, glowing */
 .pf-card { box-shadow: var(--shadow), 0 0 60px -18px var(--glow); }

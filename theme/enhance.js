@@ -306,7 +306,12 @@
   function markRankings() {
     if (/\/top_(users|teams|hosts)\.php/i.test(location.pathname)) {
       var t = document.querySelector('table.table');
-      if (t) t.classList.add('pf-ranked');
+      if (!t) return;
+      t.classList.add('pf-ranked');
+      var n = 0;
+      t.querySelectorAll('tr').forEach(function (tr) {
+        if (n < 3 && tr.querySelector('td') && !tr.querySelector('table')) { n++; tr.classList.add('pf-r' + n); }
+      });
     }
   }
 
