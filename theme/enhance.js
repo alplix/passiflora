@@ -144,6 +144,7 @@
   function countUp(node, target, dec) {
     if (reduceMotion || !window.requestAnimationFrame) { node.textContent = fmt(target, dec); return; }
     var t0 = null;
+    setTimeout(function () { node.textContent = fmt(target, dec); }, 1800);   // in case animation frames are throttled
     function step(t) {
       if (t0 == null) t0 = t;
       var p = Math.min(1, (t - t0) / 1300);
@@ -159,8 +160,9 @@
       var doc = new DOMParser().parseFromString(t, 'text/html');
       var pairs = [];
       doc.querySelectorAll('tr').forEach(function (tr) {
+        if (tr.querySelector('table')) return;               // outer layout rows
         var c = tr.querySelectorAll('td');
-        if (c.length >= 2) pairs.push([c[0].textContent.trim(), c[1].textContent.trim()]);
+        if (c.length === 2) pairs.push([c[0].textContent.trim(), c[1].textContent.trim()]);
       });
       function num(s) { return parseFloat(String(s).replace(/[^0-9.]/g, '')) || 0; }
       var recent = pairs.filter(function (p) { return /with recent credit/i.test(p[0]); });

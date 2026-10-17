@@ -298,7 +298,6 @@ input[type="button"], input[type="submit"], .btn, a.btn {
   border-radius: 10px;
   font-weight: 650;
   border: 1px solid transparent;
-  background-image: none !important;
   box-shadow: none;
   text-shadow: none;
   transition: transform .12s, box-shadow .15s, filter .15s;
