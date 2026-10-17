@@ -494,14 +494,14 @@ body::after {
 }
 
 /* link lists on the home page become tiles */
-.mainnav ul:nth-of-type(n+3) {
+.mainnav :is(ul:nth-of-type(n+3), ul.pf-tiles) {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(165px, 1fr));
   gap: 10px;
   padding: 0;
   margin: 12px 0 18px;
 }
-.mainnav ul:nth-of-type(n+3) > li {
+.mainnav :is(ul:nth-of-type(n+3), ul.pf-tiles) > li {
   position: relative;
   padding: 12px 14px;
   border: 1px solid var(--border);
@@ -512,15 +512,15 @@ body::after {
   line-height: 1.4;
   transition: transform .18s, border-color .18s, box-shadow .18s, background .18s;
 }
-.mainnav ul:nth-of-type(n+3) > li::before { display: none; }
-.mainnav ul:nth-of-type(n+3) > li > a:first-child {
+.mainnav :is(ul:nth-of-type(n+3), ul.pf-tiles) > li::before { display: none; }
+.mainnav :is(ul:nth-of-type(n+3), ul.pf-tiles) > li > a:first-child {
   display: block;
   font-size: 14.5px;
   font-weight: 700;
   color: var(--text);
 }
-.mainnav ul:nth-of-type(n+3) > li > a:first-child::after { content: ""; position: absolute; inset: 0; }
-.mainnav ul:nth-of-type(n+3) > li:hover {
+.mainnav :is(ul:nth-of-type(n+3), ul.pf-tiles) > li > a:first-child::after { content: ""; position: absolute; inset: 0; }
+.mainnav :is(ul:nth-of-type(n+3), ul.pf-tiles) > li:hover {
   transform: translateY(-3px);
   border-color: var(--p1);
   background: var(--hover);

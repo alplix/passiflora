@@ -278,6 +278,7 @@
     if (!nav || nav.getAttribute('data-pf-req')) return;
     var uls = nav.querySelectorAll('ul');
     var old = null, i;
+    if (uls.length >= 4) { uls[2].classList.add('pf-tiles'); uls[3].classList.add('pf-tiles'); }   // returning participants, community
     for (i = 0; i < uls.length; i++) {
       if (/ram|processor|MB/i.test(uls[i].textContent) && /Windows|Linux/i.test(uls[i].textContent)) { old = uls[i]; break; }
     }
