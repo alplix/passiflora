@@ -1,8 +1,8 @@
-# Meadow - a theme for NumberFields@home
+# Prime - a theme for NumberFields@home
 
-A light and dark theme for the NumberFields@home web site whose colours come from the site's own banner: grass green,
-soil brown, sky gold and the blue-grey of its letters, with serif headings. The BOINC pages, tables and forums keep their
-structure. It follows the light/dark setting of your system and works on phones.
+A modern, quiet light and dark theme for the NumberFields@home web site: system sans type, soft cards, hairline
+tables and one indigo accent. The BOINC pages, tables and forums keep their structure, and the site's own banner stays.
+It follows the light/dark setting of your system and works on phones.
 
 Coded By Alperen Yavuz · <https://github.com/alplix/passiflora>
 
