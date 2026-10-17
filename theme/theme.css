@@ -237,7 +237,8 @@ center > img.img-responsive,
 
 /* ---- tables ---- */
 .table, table { color: var(--text); }
-.table { background: transparent; border-collapse: separate; border-spacing: 0; }
+.table { border-collapse: separate; border-spacing: 0; }
+table.table { background: var(--card) !important; border: 1px solid var(--border); border-radius: 12px; }
 .table > thead > tr > th,
 .table > tbody > tr > th,
 th, td.heading {
@@ -252,11 +253,11 @@ th, td.heading {
   vertical-align: middle;
 }
 th.subheading { background: var(--card-2); color: var(--muted); }
-tr.bg-primary > th, tr.bg-primary > td, .bg-primary {
-  background: linear-gradient(120deg, var(--p1), var(--p2)) !important;
-  color: #fff !important;
-}
-tr.bg-primary a { color: #fff; text-decoration: underline; }
+th.bg-primary, td.bg-primary, tr.bg-primary > th, tr.bg-primary > td { background: var(--p1) !important; color: #fff !important; border-bottom: 0; }
+.panel-heading.bg-primary, div.bg-primary, span.bg-primary, p.bg-primary { background: linear-gradient(120deg, var(--p1), var(--p2)) !important; color: #fff !important; }
+.bg-primary a, .bg-primary a:link, .bg-primary a:visited { color: #fff; text-decoration: underline; text-underline-offset: 3px; }
+tr.bg-primary > th:first-child, th.bg-primary:first-child { border-top-left-radius: 11px; }
+tr.bg-primary > th:last-child, th.bg-primary:last-child { border-top-right-radius: 11px; }
 .bg-default { background: var(--card-2) !important; color: var(--text) !important; }
 .table > tbody > tr > td, .table > tbody > tr > th, td { border-top: 1px solid var(--border); padding: 8px 12px; vertical-align: middle; }
 .table-condensed > tbody > tr > td { padding: 6px 10px; }
